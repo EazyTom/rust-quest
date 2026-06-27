@@ -1,0 +1,16 @@
+# Rust build output
+/target/
+
+# Player save data (local only)
+.rust-test/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "player_name": "Ayush",
+  "xp": 40,
+  "completed_steps": ["cargo:learn"],
+  "completed_quests": [],
+  "achievements": ["first_steps"],
+  "practice_unlock_all": false,
+  "streak_days": 1,
+  "last_played_date": "2026-06-27"
+}

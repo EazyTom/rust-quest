@@ -1,0 +1,79 @@
+[package]
+name = "rust-quest"
+version = "0.1.0"
+edition = "2024"
+description = "Rust Quest — a retro CLI adventure to learn Rust"
+license = "MIT"
+readme = "README.md"
+
+[[bin]]
+name = "rust-quest"
+path = "src/main.rs"
+
+[dependencies]
+colored = "3.0"
+crossterm = "0.28"
+dialoguer = "0.11"
+opener = "0.7"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+unicode-width = "0.2"
+
+[dev-dependencies]
+tempfile = "3.14"
+
+[[example]]
+name = "cargo"
+path = "examples/cargo.rs"
+
+[[example]]
+name = "types"
+path = "examples/types.rs"
+
+[[example]]
+name = "ownership"
+path = "examples/ownership.rs"
+
+[[example]]
+name = "structs_enums"
+path = "examples/structs_enums.rs"
+
+[[example]]
+name = "errors"
+path = "examples/errors.rs"
+
+[[example]]
+name = "collections"
+path = "examples/collections.rs"
+
+[[example]]
+name = "traits_generics"
+path = "examples/traits_generics.rs"
+
+[[example]]
+name = "lifetimes"
+path = "examples/lifetimes.rs"
+
+[[example]]
+name = "modules_prelude"
+path = "examples/modules_prelude.rs"
+
+[[example]]
+name = "iterators_closures"
+path = "examples/iterators_closures.rs"
+
+[[example]]
+name = "smart_pointers"
+path = "examples/smart_pointers.rs"
+
+[[example]]
+name = "concurrency"
+path = "examples/concurrency.rs"
+
+[[example]]
+name = "testing_docs"
+path = "examples/testing_docs.rs"
+
+[[example]]
+name = "advanced_cargo"
+path = "examples/advanced_cargo.rs"
