@@ -1,4 +1,4 @@
-//! Per-quest dungeon rooms, foes, and DM narration.
+//! Per-quest dungeon rooms, foes, and Dungeon Master narration.
 //!
 //! GAME: each quest is a "room" with a foe defeated by the challenge quiz.
 
@@ -25,14 +25,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "The Crate Cellar",
             intro: [
-                "You push open a door of nailed planks.",
-                "A mimic clutches a glowing Cargo.toml.",
+                "🕯️ Candlelight reveals a door of nailed planks.",
+                "📦 A mimic clutches a glowing Cargo.toml.",
             ],
             enemy_emoji: "📦",
             enemy_name: "Manifest Mimic",
             enemy_taunt: "Build failed! Know your manifest, fool!",
             enemy_defeat: "The mimic drops its Cargo.toml and flees.",
-            learn_prompt: "You study crate runes by torchlight…",
+            learn_prompt: "🕯️ You study crate runes by candlelight…",
             challenge_open: "The Manifest Mimic blocks the stair!",
         },
     ),
@@ -41,14 +41,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "Hall of Sigils",
             intro: [
-                "Sigils pulse with i32, bool, and char.",
-                "A wraith shifts form until typed true.",
+                "🕯️ Sigils pulse with i32, bool, and char.",
+                "👻 A wraith shifts form until typed true.",
             ],
             enemy_emoji: "👻",
             enemy_name: "Type Wraith",
             enemy_taunt: "Wrong type! The wraith flickers and laughs.",
             enemy_defeat: "Named true, the wraith dissolves to mist.",
-            learn_prompt: "You trace each sigil with careful ink…",
+            learn_prompt: "🪄 You trace each sigil with careful ink…",
             challenge_open: "The Type Wraith bars the archway!",
         },
     ),
@@ -57,14 +57,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "The Borrow Pit",
             intro: [
-                "Chains of rules hang from rusted hooks.",
-                "A goblin hoards every value — lend well.",
+                "🕯️ Chains of rules hang from rusted hooks.",
+                "👺 A goblin hoards every value — lend well.",
             ],
             enemy_emoji: "👺",
             enemy_name: "Move Goblin",
             enemy_taunt: "That value moved! You cannot borrow it!",
             enemy_defeat: "The goblin yields — ownership is yours.",
-            learn_prompt: "You read the laws of move and borrow…",
+            learn_prompt: "📜 You read the laws of move and borrow…",
             challenge_open: "The Move Goblin snarls in the pit!",
         },
     ),
@@ -73,14 +73,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "Mason's Atrium",
             intro: [
-                "Pillars of struct stone frame the hall.",
-                "A viper forks paths with match-lit eyes.",
+                "🕯️ Pillars of struct stone frame the hall.",
+                "🐍 A viper forks paths with match-lit eyes.",
             ],
             enemy_emoji: "🐍",
             enemy_name: "Variant Viper",
             enemy_taunt: "No matching arm! The viper strikes!",
             enemy_defeat: "Your match arm pins the viper still.",
-            learn_prompt: "You carve struct blueprints in the dust…",
+            learn_prompt: "🪄 You carve struct blueprints in the dust…",
             challenge_open: "The Variant Viper coils on the dais!",
         },
     ),
@@ -89,14 +89,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "The Panic Vault",
             intro: [
-                "Floor tiles read Ok on one side, Err on other.",
-                "An ogre roars — never unwrap in blind haste!",
+                "🕯️ Floor tiles read Ok on one side, Err on other.",
+                "👹 An ogre roars — never unwrap in blind haste!",
             ],
             enemy_emoji: "👹",
             enemy_name: "Unwrap Ogre",
             enemy_taunt: "Panic! Your unwrap shatters the vault!",
             enemy_defeat: "Result in hand, the ogre slumps in chains.",
-            learn_prompt: "You learn to carry errors, not crash…",
+            learn_prompt: "📜 You learn to carry errors, not crash…",
             challenge_open: "The Unwrap Ogre guards the vault door!",
         },
     ),
@@ -105,14 +105,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "Stack & Heap Stacks",
             intro: [
-                "Shelves of Vec, HashMap, and String rise.",
-                "A beast gnaws at indices past the end.",
+                "🕯️ Shelves of Vec, HashMap, and String rise.",
+                "🐀 A beast gnaws at indices past the end.",
             ],
             enemy_emoji: "🐀",
             enemy_name: "Bounds Beast",
             enemy_taunt: "Index out of bounds! The beast howls!",
             enemy_defeat: "Safe indexing — the beast retreats.",
-            learn_prompt: "You inventory growable hoards of data…",
+            learn_prompt: "📜 You inventory growable hoards of data…",
             challenge_open: "The Bounds Beast prowls the stacks!",
         },
     ),
@@ -121,14 +121,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "Polymorph Gallery",
             intro: [
-                "Statues demand one trait to pass the gate.",
-                "Slime copies your shape — stay generic, hero.",
+                "🕯️ Statues demand one trait to pass the gate.",
+                "🫠 Slime copies your shape — stay generic, hero.",
             ],
             enemy_emoji: "🫠",
             enemy_name: "Monomorph Slime",
             enemy_taunt: "Too concrete! The slime absorbs you!",
             enemy_defeat: "Generics hold — the slime melts away.",
-            learn_prompt: "You sketch trait bounds on gallery walls…",
+            learn_prompt: "🪄 You sketch trait bounds on gallery walls…",
             challenge_open: "Monomorph Slime oozes from the plinth!",
         },
     ),
@@ -137,14 +137,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "The Epoch Crypt",
             intro: [
-                "Hourglasses tick with `'a` carved in sand.",
-                "A lich binds every scroll to a lifetime.",
+                "🕯️ Hourglasses tick with `'a` carved in sand.",
+                "💀 A lich binds every scroll to a lifetime.",
             ],
             enemy_emoji: "💀",
             enemy_name: "Lifetime Lich",
             enemy_taunt: "Does not live long enough! the lich wails.",
             enemy_defeat: "Annotations hold — the lich turns to dust.",
-            learn_prompt: "You read tomes that outlive their scribes…",
+            learn_prompt: "📜 You read tomes that outlive their scribes…",
             challenge_open: "The Lifetime Lich rises from the crypt!",
         },
     ),
@@ -153,14 +153,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "Prelude Chapel",
             intro: [
-                "`use` candles light modular side halls.",
-                "A shade hides in private crate-shadow.",
+                "🕯️ `use` candles light modular side halls.",
+                "🌑 A shade hides in private crate-shadow.",
             ],
             enemy_emoji: "🌑",
             enemy_name: "Visibility Shade",
             enemy_taunt: "Private! You may not see that path!",
             enemy_defeat: "Modules aligned — the shade fades.",
-            learn_prompt: "You map `pub` doors and prelude paths…",
+            learn_prompt: "📜 You map `pub` doors and prelude paths…",
             challenge_open: "The Visibility Shade blocks the chapel!",
         },
     ),
@@ -169,14 +169,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "The Lazy Stream",
             intro: [
-                "A river of `.iter()` coils without end.",
-                "A hydra regrows unless `.collect()` lands.",
+                "🕯️ A river of `.iter()` coils without end.",
+                "🐉 A hydra regrows unless `.collect()` lands.",
             ],
             enemy_emoji: "🐉",
             enemy_name: "Lazy Hydra",
             enemy_taunt: "Still lazy! Another head sprouts!",
             enemy_defeat: "Collected and closed — the hydra sleeps.",
-            learn_prompt: "You follow lazy streams and closure spells…",
+            learn_prompt: "🪄 You follow lazy streams and closure spells…",
             challenge_open: "The Lazy Hydra surges from the stream!",
         },
     ),
@@ -185,14 +185,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "Reference Refinery",
             intro: [
-                "Rc, Arc, and Box clang on the anvil.",
-                "A specter points at memory long freed.",
+                "🕯️ Rc, Arc, and Box clang on the anvil.",
+                "👁️ A specter points at memory long freed.",
             ],
             enemy_emoji: "👁️",
             enemy_name: "Dangling Specter",
             enemy_taunt: "Use after free! The specter wails!",
             enemy_defeat: "Smart pointers shine — specter banished.",
-            learn_prompt: "You forge pointers that own their fate…",
+            learn_prompt: "📜 You forge pointers that own their fate…",
             challenge_open: "The Dangling Specter haunts the forge!",
         },
     ),
@@ -201,14 +201,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "The Mutex Maze",
             intro: [
-                "Threaded corridors echo with lock and key.",
-                "A drake races threads — Sync or perish!",
+                "🕯️ Threaded corridors echo with lock and key.",
+                "🐲 A drake races threads — Sync or perish!",
             ],
             enemy_emoji: "🐲",
             enemy_name: "Data-Race Drake",
             enemy_taunt: "Race detected! The drake breathes chaos!",
             enemy_defeat: "Synchronized — the drake falls silent.",
-            learn_prompt: "You learn to share state without panic…",
+            learn_prompt: "🪄 You learn to share state without panic…",
             challenge_open: "The Data-Race Drake circles above!",
         },
     ),
@@ -217,14 +217,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "Assert Amphitheater",
             intro: [
-                "Banners read `#[test]` and `///` doc runes.",
-                "A gremlin skips every test that always pass.",
+                "🕯️ Banners read `#[test]` and `///` doc runes.",
+                "🧌 A gremlin skips every test that always pass.",
             ],
             enemy_emoji: "🧌",
             enemy_name: "Flaky Gremlin",
             enemy_taunt: "Assertion failed! The gremlin cackles!",
             enemy_defeat: "Green tests — the gremlin flees the stage.",
-            learn_prompt: "You inscribe tests and doc comments…",
+            learn_prompt: "📜 You inscribe tests and doc comments…",
             challenge_open: "The Flaky Gremlin jeers from the pit!",
         },
     ),
@@ -233,14 +233,14 @@ const ENCOUNTERS: &[(&str, QuestEncounter)] = &[
         QuestEncounter {
             room_name: "The Release Tower",
             intro: [
-                "Wind howls past workspace and feature flags.",
-                "A gargoyle guards `--release` tower secrets.",
+                "🕯️ Wind howls past workspace and feature flags.",
+                "🗿 A gargoyle guards `--release` tower secrets.",
             ],
             enemy_emoji: "🗿",
             enemy_name: "Feature Gargoyle",
             enemy_taunt: "Wrong profile! The gargoyle stonewalls you!",
             enemy_defeat: "Release built — the gargoyle crumbles.",
-            learn_prompt: "You climb flags toward optimized builds…",
+            learn_prompt: "🪄 You climb flags toward optimized builds…",
             challenge_open: "The Feature Gargoyle blocks the summit!",
         },
     ),
@@ -263,9 +263,9 @@ pub fn print_room_arrival(quest: Quest) {
         return;
     };
     println!();
-    println!("{}", retro::box_top(&format!("🚪  {}", enc.room_name)));
-    println!("{}", retro::dm_box_line(enc.intro[0]));
-    println!("{}", retro::dm_box_line(enc.intro[1]));
+    println!("{}", retro::box_top(&format!("🕯️  {}", enc.room_name)));
+    println!("{}", retro::dungeon_master_box_line(enc.intro[0]));
+    println!("{}", retro::dungeon_master_box_line(enc.intro[1]));
     println!(
         "{}",
         retro::enemy_box_line(enc.enemy_emoji, enc.enemy_name, "blocks your path")

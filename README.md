@@ -1,25 +1,48 @@
-# Rust Quest 🦀⚔️
+# Rust Quest 🧙⚔️
 
 > **Dedicated to Ayush** — built to help you learn Rust by playing a game and reading the source. You've got this. 🏆
 
-A retro terminal adventure that teaches Rust through **14 quests**, runnable demos, quizzes, ranks, and links to official docs. The codebase is heavily commented so you can learn *how the game works* while learning *how Rust works*.
+🕯️ *The Dungeon Master speaks:* Shadows of bad code creep across the **Kingdom of Rust**. Only a brave hero who masters ownership, traits, and the borrow checker can restore the realm. Sync this repo, run `cargo run`, and step through the mossy gate — your legend begins at the hub campfire.
+
+A retro terminal adventure that teaches Rust through **14 quests**, runnable demos, quizzes, ranks, dungeon bosses, and links to official docs. The codebase is heavily commented so you can learn *how the game works* while learning *how Rust works*.
+
+**Your kit:** 🧙 wizard · ⚔️🛡️ combat · 🕯️ torchlight · 📜 scrolls · 🧭🗺️ quest map · 💣 logic bombs · 🔥 streak flame · 🎲 Dungeon Master
 
 ---
 
-## Quick start
+## Quick start — answer the call
 
 **Prerequisites:** [rustup](https://rustup.rs/) (includes `cargo`). Use **Windows Terminal**, **WezTerm**, or **iTerm2** for emoji and colors.
 
 ```bash
+git clone <your-fork-or-repo-url>
 cd rust-quest
-cargo run          # start Rust Quest
+cargo run          # enter the hub — the Dungeon Master welcomes you
 cargo test         # run tests
 cargo doc --open   # browse annotated API docs
 ```
 
-On first launch you enter the **hub**, pick quests from the crossterm **quest map**, and progress is saved to `.rust-test/progress.json`.
+On first launch you enter the **hub** with a **🎲 Dungeon Master** intro inviting you to save the Kingdom of Rust. Pick quests from the crossterm **🧭 Quest Map 🗺️**, and progress is saved to `.rust-test/progress.json`.
 
-**Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md). AI/agent contributors: see [AGENTS.md](AGENTS.md).
+**Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md). **AI / agent contributors:** see [AGENTS.md](AGENTS.md) for architecture, save format, and safe edit boundaries.
+
+---
+
+## What's new
+
+| Feature | What it does |
+|---------|----------------|
+| 🎲 **Dungeon Master hub intro** | Welcome lore for new heroes; story nudge toward your next quest when you return |
+| 🧙⚔️ **Title banner** | Centered **RUST QUEST** — bold red on cyan, wizard and swords framing the subtitle |
+| ⚔️🕯️ **Main Menu frame** | Cyan box with magenta ornaments; sword and candle flank the menu title |
+| 🕯️📜 **MUD narrative rooms** | Per-quest room copy, foes, and DM lines in [`src/game/narrative.rs`](src/game/narrative.rs) |
+| ⚔️🛡️💣 **Combat-flavored quizzes** | Colored strike/miss copy, tavern cheers on victory |
+| 🎼 **Background music** | MP3 tracks in `assets/music/` — fixed track, cycle-on-quest, or mute (saved) |
+| ☕ **Campfire farewell** | MUD-style quit box when you leave the dungeon |
+| 📖 **Book study guide** | Hub menu gaps list with book links for topics outside the 14 quests |
+| 👑 **Epic dungeon bosses** | Four phase bosses after each arc — mixed quizzes, bonus XP |
+
+Full agent-oriented details: **[AGENTS.md](AGENTS.md)**.
 
 ---
 
@@ -27,24 +50,26 @@ On first launch you enter the **hub**, pick quests from the crossterm **quest ma
 
 ```mermaid
 flowchart TD
-    Hub[Rust Quest Hub] --> Map[Quest Map]
-    Map --> Learn[Learn: demo + memory note]
-    Learn --> Challenge[Challenge: 3 questions + boss]
-    Challenge -->|pass 75%+| Reward[XP + rank + achievements]
-    Challenge -->|fail| Hint[Hints + retry + open docs]
+    Hub[Rust Quest Hub 🧙] --> DM[🎲 Dungeon Master intro]
+    DM --> Map[🧭 Quest Map 🗺️]
+    Map --> Room[🕯️ Room arrival + foe]
+    Room --> Learn[💡 Learn: demo + memory note]
+    Learn --> Challenge[⚔️ Challenge: 3 questions + boss]
+    Challenge -->|pass 75%+| Reward[🔥 XP + rank + 🍺🍺 cheer]
+    Challenge -->|fail| Hint[💡 Hints + 📜 retry docs]
     Reward --> Hub
-    Hub --> Resources[Open Book / Rust by Example / YouTube]
-    Hub --> Practice[Unlock All practice mode]
+    Hub --> Resources[📜 Resources — book & video scrolls]
+    Hub --> Practice[🔓 Unlock All practice mode]
 ```
 
 Each quest follows four steps:
 
-1. **Learn** — see Rust concepts run with explanations
-2. **Challenge** — 4 questions (3 + boss); need **≥75%** to pass
-3. **Reward** — XP (once per step), rank checks, badges
-4. **Explore** — optional links in your browser
+1. **💡 Learn** — see Rust concepts run with explanations
+2. **⚔️ Challenge** — 4 questions (3 + boss); need **≥75%** to pass
+3. **🔥 Reward** — XP (once per step), rank checks, badges
+4. **📖 Explore** — optional links in your browser
 
-**Hub menu:** Quest Map · Profile · Resources · Sandbox · Book study guide · Unlock All · Reset · **Music** · Quit
+**Hub menu:** 🧭 Quest Map · ❤️ Profile · 📜 Resources · 🛠️ Sandbox · 📖 Book study guide · 🔓 Unlock All · 💾 Reset · 🎼 Music · ☕ Quit
 
 Background music plays from `assets/music/` (MP3). Choose a fixed track or **cycle per quest** from the Music menu; mute is saved separately.
 
@@ -71,7 +96,7 @@ Background music plays from `assets/music/` (MP3). Choose a fixed track or **cyc
 | 13 | ✅ Testing & Docs | `#[test]`, `cargo doc` |
 | 14 | 🚀 Advanced Cargo | features, workspaces |
 
-Quests unlock in order. **Unlock All** lets you practice without waiting.
+Quests unlock in order. **🔓 Unlock All** lets you practice without waiting.
 
 ---
 
@@ -88,7 +113,7 @@ Quests are grouped into **four story arcs** tied to [The Rust Book](https://doc.
 
 Complete all **14 quests** to become **👑 Rust Quest Champion** — a full victory celebration with treasure, potions, and a nudge to revisit every quest and resource link.
 
-**Book study guide** (hub menu): topics we don’t have a dedicated quest for yet — control flow, functions, pattern depth, macros intro — with links into the book.
+**📖 Book study guide** (hub menu): topics we don’t have a dedicated quest for yet — control flow, functions, pattern depth, macros intro — with links into the book.
 
 ---
 
@@ -109,7 +134,30 @@ Ranks unlock when you **complete** quests (challenge passed), not from XP alone.
 | 🗂️ Module Architect | Complete Modules & Prelude |
 | 👑 Rust Quest Champion | Complete all 14 quests |
 
-XP (+15 learn, +25 challenge) fills a progress bar. **Streak** counts consecutive days you complete a step. Progress file: `.rust-test/progress.json` (safe to delete to start over).
+XP (+15 learn, +25 challenge) fills a progress bar. **🔥 Streak** counts consecutive days you complete a step. Progress file: `.rust-test/progress.json` (safe to delete to start over).
+
+---
+
+## In-game resources (📜 hub menu)
+
+From the hub, open **📜 Resources — open lore scrolls** to launch browser links per quest — the same scrolls available inside each quest’s **📖 Consult scrolls** step.
+
+| Scroll | Opens |
+|--------|--------|
+| 📖 **The Rust Book** | Official book chapter for that quest |
+| 📜 **Rust by Example** | Runnable examples for the topic |
+| 📖 **std docs** | Standard library docs (when linked) |
+| 📜 **YouTube scrolls** | Curated video links per quest |
+
+**Always-on references** (also linked throughout quests):
+
+- [The Rust Book](https://doc.rust-lang.org/book/) — primary lore
+- [Rust by Example](https://doc.rust-lang.org/rust-by-example/) — short runnable lessons
+- [Standard library (`std`)](https://doc.rust-lang.org/std/) — API reference
+- [Rust Reference](https://doc.rust-lang.org/reference/) — language details
+- [rustup.rs](https://rustup.rs/) — install the toolchain and begin your journey
+
+Per-quest URLs live in [`src/resources/links.rs`](src/resources/links.rs) and each `src/topics/*.rs` file.
 
 ---
 
@@ -147,13 +195,16 @@ Examples exist for every quest: `cargo run --example cargo`, `--example types`, 
 ├── Cargo.toml
 ├── README.md
 ├── CONTRIBUTING.md
-├── AGENTS.md
+├── AGENTS.md              ← architecture for AI agents
 ├── assets/music/          ← background MP3 tracks
 ├── src/
 │   ├── main.rs
 │   ├── game/
+│   │   ├── hub.rs         ← hub + menus
+│   │   ├── narrative.rs   ← DM room lore
+│   │   └── ui/retro.rs    ← boxes, title banner, main menu frame
 │   ├── topics/
-│   └── resources/links.rs
+│   └── resources/links.rs ← quest URL table
 ├── examples/
 ├── tests/
 └── scripts/
@@ -164,6 +215,7 @@ flowchart LR
     Play[cargo run] --> Game[game/]
     Read[src/topics/] --> Learn[Rust concepts]
     Game --> Topics[topics/]
+    Game --> Narrative[narrative.rs]
 ```
 
 ---
@@ -175,14 +227,17 @@ Suggested order for Ayush:
 1. [`src/main.rs`](src/main.rs) — startup flow
 2. [`src/game/state.rs`](src/game/state.rs) — unlocks, XP, ranks
 3. [`src/game/ui/map.rs`](src/game/ui/map.rs) — crossterm quest map
-4. [`src/topics/registry.rs`](src/topics/registry.rs) — quest list
-5. Any file in [`src/topics/`](src/topics/) for a quest you played
-6. [`src/game/ui/retro.rs`](src/game/ui/retro.rs) — terminal styling
+4. [`src/game/narrative.rs`](src/game/narrative.rs) — Dungeon Master encounter copy
+5. [`src/topics/registry.rs`](src/topics/registry.rs) — quest list
+6. Any file in [`src/topics/`](src/topics/) for a quest you played
+7. [`src/game/ui/retro.rs`](src/game/ui/retro.rs) — terminal styling and boxes
 
 Look for comment prefixes:
 
 - `// LEARN:` — Rust concept explained
 - `// GAME:` — why this game code exists
+
+Agent contributors: start with **[AGENTS.md](AGENTS.md)** before editing hub, save format, or quest registry.
 
 ---
 
@@ -204,7 +259,7 @@ Look for comment prefixes:
 | Concurrency | [Ch. 16](https://doc.rust-lang.org/book/ch16-00-concurrency.html) | [Threads](https://doc.rust-lang.org/rust-by-example/std_misc/threads.html) |
 | Testing | [Ch. 11](https://doc.rust-lang.org/book/ch11-00-testing.html) | [Tests](https://doc.rust-lang.org/rust-by-example/testing/unit_testing.html) |
 
-More: [The Rust Book](https://doc.rust-lang.org/book/) · [Rust by Example](https://doc.rust-lang.org/rust-by-example/) · [std docs](https://doc.rust-lang.org/std/)
+More: [The Rust Book](https://doc.rust-lang.org/book/) · [Rust by Example](https://doc.rust-lang.org/rust-by-example/) · [std docs](https://doc.rust-lang.org/std/) · [Rust Reference](https://doc.rust-lang.org/reference/)
 
 ---
 
@@ -236,4 +291,4 @@ MIT — see [LICENSE-MIT](LICENSE-MIT).
 
 ---
 
-*For Ayush: play one quest a day, read the matching source file, and follow the book link when a quiz stumps you. See you at 👑 Rust Quest Champion.*
+*🎲 The Dungeon Master closes with this:* Install Rust. Sync the project. Run one quest by 🕯️ torchlight, read the matching source file, and follow the 📜 book link when a 💣 logic bomb stumps you. The Kingdom of Rust awaits — see you at 👑 Rust Quest Champion.*

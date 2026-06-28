@@ -159,15 +159,15 @@ pub fn print_dungeon_intro(phase: &EpicPhase) {
         ))
     );
     println!("{}", phase.name.bright_magenta().bold());
-    println!("{}\n", retro::dm_says(phase.intro));
+    println!("{}\n", retro::dungeon_master_says(phase.intro));
     println!(
         "{}",
-        format!("📖 Lore scroll: {}", phase.book_chapters).bright_cyan()
+        retro::lore_scroll(&format!("Rust Book: {}", phase.book_chapters))
     );
 }
 
 pub fn print_book_gaps_guide() {
-    println!("\n{}", retro::section_header("📖 Rust Book — explore next"));
+    println!("\n{}", retro::section_header("📜 Rust Book — explore next"));
     println!(
         "{}",
         "Rust Quest covers the core path of The Rust Programming Language.".dimmed()
@@ -190,13 +190,13 @@ pub fn print_book_gaps_guide() {
 /// Epic victory when all 14 quests are complete — show once, then encourage replay.
 pub fn celebrate_champion(state: &GameState) {
     let name = &state.player_name;
-    let trophy = "🏆⚔️🦀👑✨🎉💎🧪⚗️🏅🪙💰🗝️📜🛡️💍";
+    let coins = "🪙💰🪙💰🪙💰🪙💰🪙💰🪙💰";
     println!();
     println!(
         "{}",
-        retro::box_top(&format!("🎊  {name} — RUST QUEST CHAMPION!  🎊"))
+        retro::box_top(&format!("👑  {name} — RUST QUEST CHAMPION!  👑"))
     );
-    println!("{}", retro::box_line(trophy));
+    println!("{}", retro::box_line(coins));
     println!("{}", retro::box_line("You cleared every quest on the map!"));
     println!(
         "{}",
@@ -205,35 +205,44 @@ pub fn celebrate_champion(state: &GameState) {
     println!(
         "{}",
         retro::box_line(&format!(
-            "Loot: {} XP · {} quests · 👑 Champion rank",
+            "👑 Champion rank · {} XP · {} quests cleared",
             state.xp,
             state.completed_quests.len()
         ))
     );
     println!(
         "{}",
-        retro::box_line("🧪 Potions of knowledge · 💎 Rust gems · 🪙 Gold")
+        retro::box_line("🪙💰 Treasure hoard: gold coins beyond count!")
+    );
+    println!(
+        "{}",
+        retro::box_line("🍺🍺 The tavern roars — legendary win! 🍺🍺")
+    );
+    println!(
+        "{}",
+        retro::box_line("📜 Scrolls · 🧪 potions · 💎 Rust gems · 🪄 wands")
     );
     println!("{}", retro::box_bottom());
     println!();
     println!(
         "{}",
-        "🎉 🏆 🦀 LEGENDARY VICTORY! 🦀 🏆 🎉"
+        "👑 🪙💰 LEGENDARY VICTORY! 🍺🍺 💰🪙 👑"
             .bright_yellow()
             .bold()
     );
     println!();
+    println!("{}", retro::tavern_cheer());
     println!("{}", "Your adventure continues:".bright_white().bold());
-    println!("  🗺️  Quest Map — replay any demo or challenge for practice");
-    println!("  📚 Resources — open every quest’s Rust Book & Rust by Example links");
-    println!("  🧪 Sandbox — rerun demos without XP pressure");
-    println!("  📖 Read the chapters we skimmed (see Study Guide below)");
+    println!("  🧭 Quest Map — replay any demo or challenge for practice");
+    println!("  📜 Resources — open every quest’s Rust Book & scrolls");
+    println!("  🪄 Sandbox — rerun demos without XP pressure");
+    println!("  📖 Book study guide — chapters we skimmed along the way");
     println!();
     print_book_gaps_guide();
     println!(
         "{}",
         format!(
-            "Hero {name}, the realm of Rust is yours. Keep building — and share the quest! 🦀⚔️👑"
+            "Hero {name}, the realm of Rust is yours. 👑🪙 🍺🍺 Keep building! 🧙⚔️",
         )
         .bright_green()
         .bold()

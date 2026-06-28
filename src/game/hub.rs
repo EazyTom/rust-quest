@@ -49,6 +49,15 @@ fn quest_map_session(state: &mut GameState, music: &MusicHandle) -> io::Result<(
     Ok(())
 }
 
+fn print_farewell(state: &GameState) {
+    println!();
+    println!("{}", retro::box_top("🌙  Campfire Farewell"));
+    for line in copy::farewell_lines(&state.player_name) {
+        println!("{}", retro::box_line(&line));
+    }
+    println!("{}\n", retro::box_bottom());
+}
+
 pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
     if state.player_name.is_empty() {
         let name: String = Input::new()
@@ -67,29 +76,31 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
 
     loop {
         print_hub(state);
+        print_hub_adventure_intro(state);
         if state.is_champion() {
             println!(
                 "{}",
-                "👑 Champion of Rust Quest — the dungeon is yours to revisit! 🗺️📚"
+                "👑🪙💰 Champion — the dungeon is yours to revisit! 🧭📜"
                     .bright_yellow()
                     .bold()
             );
         }
-        println!("{}", retro::section_header("📜 Command Table"));
+        println!("{}", retro::main_menu_frame());
         let choices = &[
-            "Quest Map — enter the dungeon",
-            "Profile — inspect thy legend",
-            "Resources — open lore scrolls",
-            "Sandbox — replay demo runes",
-            "Book study guide — gaps & next steps",
-            "Unlock All — practice mode",
-            "Reset progress — wipe the slate",
-            "Music — mute or change track",
-            "Quit — leave the dungeon",
+            "🧭 Quest Map — enter the dungeon",
+            "❤️ Profile — inspect thy legend",
+            "📜 Resources — open lore scrolls",
+            "🛠️ Sandbox — replay demo runes",
+            "📖 Book study guide — gaps & next steps",
+            "🔓 Unlock All — practice mode",
+            "💾 Reset progress — wipe the slate",
+            "🎼 Music — mute or change track",
+            "☕ Quit — leave the dungeon",
         ];
-        let sel = select_menu("Choose (↑/↓, Enter, Esc back)", choices)?;
+        let sel = select_menu("Choose (↑/↓, Enter, Esc to quit)", choices)?;
         let Some(sel) = sel else {
-            continue;
+            print_farewell(state);
+            return Ok(true);
         };
 
         match sel {
@@ -102,7 +113,7 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
                 if state.is_champion() {
                     println!(
                         "{}",
-                        "You beat the game — now deep-read each quest’s book links! 📖"
+                        "You beat the game — deep-read each quest’s 📖 book scrolls!"
                             .bright_green()
                     );
                 }
@@ -120,19 +131,56 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
             }
             7 => music_menu(state, music)?,
             8 => {
-                println!();
-                println!("{}", retro::box_top("🌙  Campfire Farewell"));
-                for line in copy::farewell_lines(&state.player_name) {
-                    println!("{}", retro::box_line(&line));
-                }
-                println!("{}\n", retro::box_bottom());
+                print_farewell(state);
                 return Ok(true);
             }
             _ => {}
         }
         let _ = progress::save_progress(state);
-        println!("\n{}\n", retro::dm_says(copy::session_quote()));
+        println!("\n{}\n", retro::dungeon_master_says(copy::session_quote()));
     }
+}
+
+fn print_hub_adventure_intro(state: &GameState) {
+    if state.is_champion() {
+        return;
+    }
+
+    let lines: [String; 3] = if state.is_fresh_adventurer() {
+        copy::hub_welcome_lines(&state.player_name)
+    } else if let Some(quest) = state.next_active_quest() {
+        let study_first = !state.step_done(quest.id, QuestStep::Learn);
+        if let Some(enc) = narrative::encounter_for(quest) {
+            copy::hub_quest_guidance_lines(
+                &state.player_name,
+                quest.emoji,
+                quest.title,
+                enc.room_name,
+                enc.enemy_emoji,
+                enc.enemy_name,
+                study_first,
+            )
+        } else {
+            copy::hub_quest_guidance_lines(
+                &state.player_name,
+                quest.emoji,
+                quest.title,
+                quest.title,
+                quest.emoji,
+                "the room's foe",
+                study_first,
+            )
+        }
+    } else {
+        return;
+    };
+
+    println!();
+    println!("{}", retro::box_top("🎲  Dungeon Master"));
+    for line in &lines {
+        println!("{}", retro::dungeon_master_box_line(line));
+    }
+    println!("{}\n", retro::box_bottom());
 }
 
 fn print_hub(state: &GameState) {
@@ -142,7 +190,7 @@ fn print_hub(state: &GameState) {
     println!(
         "{}",
         retro::box_line(&format!(
-            "Player: {}   Rank: {} {}",
+            "Player: 🧙 {}   Rank: {} {}",
             state.player_name,
             rank.emoji(),
             rank.title()
@@ -161,8 +209,8 @@ fn print_hub(state: &GameState) {
 }
 
 fn show_profile(state: &GameState) {
-    println!("{}", retro::section_header("👤 Profile"));
-    println!("Name: {}", state.player_name);
+    println!("{}", retro::section_header("❤️ Profile"));
+    println!("Name: 🧙 {}", state.player_name);
     println!("XP: {} / {}", state.xp, xp::MAX_XP);
     println!("Quests completed: {}/14", state.completed_quests.len());
     if state.dungeon_bosses.len() < epic::PHASES.len() {
@@ -344,10 +392,10 @@ fn resource_menu() -> io::Result<()> {
 
 fn open_links_menu(quest: &Quest) -> io::Result<()> {
     let items = &[
-        "The Rust Book",
-        "Rust by Example",
-        "std docs (if any)",
-        "YouTube",
+        "📖 The Rust Book",
+        "📜 Rust by Example",
+        "📖 std docs (if any)",
+        "📜 YouTube scrolls",
     ];
     loop {
         let sel = select_menu(&format!("Resources: {}", quest.title), items)?;
@@ -388,9 +436,9 @@ fn run_quest(state: &mut GameState, quest_id: &str) -> io::Result<()> {
 
     let enc = narrative::encounter_for(quest);
     let steps = &[
-        "Study the runes — Learn (+XP once)",
-        "Face the foe — quiz encounter",
-        "Consult scrolls — book & video links",
+        "💡 Study the runes — Learn (+XP once)",
+        "⚔️ Face the foe — quiz encounter",
+        "📖 Consult scrolls — book & video links",
     ];
     loop {
         let header = if let Some(e) = enc {
@@ -415,7 +463,7 @@ fn run_quest(state: &mut GameState, quest_id: &str) -> io::Result<()> {
 
 fn run_learn(state: &mut GameState, quest: Quest) {
     if let Some(enc) = narrative::encounter_for(quest) {
-        println!("\n{}", retro::dm_says(enc.learn_prompt));
+        println!("\n{}", retro::dungeon_master_says(enc.learn_prompt));
     }
     println!("\n{}\n", (quest.demo)());
     println!("{}", copy::memory_safety_header().bright_yellow().bold());
@@ -453,14 +501,17 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
 
     println!();
     if let Some(e) = enc {
-        println!("{}", retro::dm_says(e.challenge_open));
+        println!("{}", retro::dungeon_master_says(e.challenge_open));
         println!(
             "{}",
             retro::enemy_says(e.enemy_emoji, e.enemy_name, e.enemy_taunt)
         );
         println!();
     } else {
-        println!("{}", retro::dm_says("A foe blocks the way — answer true to advance!"));
+        println!(
+            "{}",
+            retro::dungeon_master_says("A foe blocks the way — answer true to advance!")
+        );
         println!();
     }
 
@@ -489,16 +540,17 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
         }
         if idx != q.correct {
             any_wrong = true;
+            println!("{}", retro::combat_miss());
             println!("{}", copy::wrong_answer_hint().yellow());
             println!("Hint: {}", q.hint.yellow());
             println!("{}", q.explanation.dimmed());
         } else {
-            println!("{}", retro::victory_flash("Clean hit!"));
+            println!("{}", retro::combat_hit());
         }
         answers.push(idx);
     }
 
-    if any_wrong && confirm_menu("Open Rust Book link?", true)?.unwrap_or(false) {
+    if any_wrong && confirm_menu("📖 Open Rust Book scroll?", true)?.unwrap_or(false) {
         open_url(quest.links.book);
     }
 
@@ -514,6 +566,7 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
             println!("{}", retro::success(&copy::quest_cleared(e.enemy_name)));
         }
         println!("{}", retro::success(copy::quiz_pass()));
+        println!("{}", retro::tavern_cheer());
         println!(
             "{}",
             retro::success(&format!("+{XP_CHALLENGE} XP — foe vanquished!"))
@@ -559,7 +612,7 @@ fn try_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> i
         .bold()
     );
     if !confirm_menu(
-        &format!("🎲 DM: Descend to face {}?", phase.boss_name),
+        &format!("🎲 Dungeon Master: Descend to face {}?", phase.boss_name),
         true,
     )?
     .unwrap_or(false)
@@ -590,16 +643,14 @@ fn run_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> i
 
     let mut answers = Vec::new();
     for (i, q) in presented.iter().enumerate() {
+        let is_final = i + 1 == presented.len();
         println!(
             "\n{}",
-            format!(
-                "{} Boss strike {}/{}",
-                phase.boss_emoji,
-                i + 1,
-                presented.len()
-            )
-            .bright_red()
-            .bold()
+            if is_final {
+                retro::final_gambit(phase.boss_emoji, phase.boss_name)
+            } else {
+                retro::boss_combat_round(i + 1, presented.len(), phase.boss_emoji)
+            }
         );
         println!("{}", q.prompt);
         let labels = q.choice_labels();
@@ -615,8 +666,11 @@ fn run_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> i
             return Ok(());
         };
         if idx != q.correct {
+            println!("{}", retro::combat_miss());
             println!("Hint: {}", q.hint.yellow());
             println!("{}", q.explanation.dimmed());
+        } else {
+            println!("{}", retro::combat_hit());
         }
         answers.push(idx);
     }
@@ -631,6 +685,7 @@ fn run_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> i
                 phase.boss_emoji, phase.boss_name
             ))
         );
+        println!("{}", retro::tavern_cheer());
     } else {
         println!(
             "{}",

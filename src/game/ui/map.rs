@@ -108,7 +108,7 @@ fn render_map(state: &GameState, selected: usize) -> io::Result<()> {
         cursor::MoveTo(0, 0)
     )?;
 
-    writeln!(stdout, "{}", retro::box_top("🗺️  QUEST MAP"))?;
+    writeln!(stdout, "{}", retro::box_top("🧭  QUEST MAP  🗺️"))?;
     writeln!(stdout, "{}", retro::box_line(""))?;
 
     let nodes = map_nodes();
@@ -151,7 +151,7 @@ fn render_map(state: &GameState, selected: usize) -> io::Result<()> {
         if node_status(state, node.quest_id) != NodeStatus::Locked {
             if let Some(blurb) = narrative::map_selection_blurb(node.quest_id) {
                 writeln!(stdout)?;
-                writeln!(stdout, "{}", retro::dm_says(&blurb))?;
+                writeln!(stdout, "{}", retro::dungeon_master_says(&blurb))?;
             }
         }
     }

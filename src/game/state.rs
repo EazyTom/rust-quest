@@ -4,7 +4,7 @@
 
 use std::collections::HashSet;
 
-use crate::topics::registry;
+use crate::topics::registry::{self, Quest};
 
 use super::audio::MusicMode;
 use super::xp::{self, Rank, XP_CHALLENGE, XP_LEARN};
@@ -210,6 +210,23 @@ impl GameState {
     pub fn is_champion(&self) -> bool {
         self.completed_quests.len() >= 14
     }
+
+    /// First unlocked quest whose challenge is not yet passed.
+    pub fn next_active_quest(&self) -> Option<Quest> {
+        for q in registry::all() {
+            if !self.is_unlocked(q.id) {
+                break;
+            }
+            if !self.quest_completed(q.id) {
+                return Some(*q);
+            }
+        }
+        None
+    }
+
+    pub fn is_fresh_adventurer(&self) -> bool {
+        self.completed_quests.is_empty() && self.completed_steps.is_empty()
+    }
 }
 
 fn is_next_day(previous: &str, today: &str) -> bool {
@@ -262,5 +279,26 @@ mod tests {
         assert!(matches!(r1, StepResult::XpGained { amount: 15, .. }));
         let r2 = state.complete_step("cargo", QuestStep::Learn, today);
         assert_eq!(r2, StepResult::AlreadyDone);
+    }
+
+    #[test]
+    fn next_active_quest_is_first_incomplete() {
+        let state = GameState::default();
+        let q = state.next_active_quest().unwrap();
+        assert_eq!(q.id, "cargo");
+
+        let mut state = GameState::default();
+        let today = "2026-06-27";
+        state.complete_step("cargo", QuestStep::Challenge, &today);
+        let q = state.next_active_quest().unwrap();
+        assert_eq!(q.id, "types");
+    }
+
+    #[test]
+    fn fresh_adventurer_detected() {
+        assert!(GameState::default().is_fresh_adventurer());
+        let mut state = GameState::default();
+        state.complete_step("cargo", QuestStep::Learn, "2026-06-27");
+        assert!(!state.is_fresh_adventurer());
     }
 }
