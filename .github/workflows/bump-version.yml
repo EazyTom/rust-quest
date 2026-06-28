@@ -1,0 +1,76 @@
+# Bump semver, refresh README What's New, tag, and push.
+# Does NOT build or publish binaries — players clone and `cargo run`.
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semver increment
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: Preview only (no commit, tag, or push)
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bump-version
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Preview bump
+        if: inputs.dry_run
+        run: python scripts/bump_release.py --bump "${{ inputs.bump }}"
+
+      - name: Apply bump
+        if: ${{ !inputs.dry_run }}
+        run: python scripts/bump_release.py --bump "${{ inputs.bump }}" --write
+
+      - name: Resolve new version
+        if: ${{ !inputs.dry_run }}
+        id: ver
+        run: |
+          VERSION=$(grep -E '^version = ' Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "New version: $VERSION"
+
+      - name: Commit, tag, and push
+        if: ${{ !inputs.dry_run }}
+        env:
+          NEW_VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Cargo.toml Cargo.lock README.md
+          if git diff --staged --quiet; then
+            echo "Nothing to commit — no relevant changes since last tag?"
+            exit 1
+          fi
+          git commit -m "chore(release): v${NEW_VERSION}"
+          git tag -a "v${NEW_VERSION}" -m "rust-quest v${NEW_VERSION}"
+          git push
+          git push origin "v${NEW_VERSION}"

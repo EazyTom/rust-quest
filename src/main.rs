@@ -17,9 +17,7 @@ fn main() {
 }
 
 fn run_game(state: &mut GameState, music: &MusicHandle) -> std::io::Result<()> {
-    let quit = run_hub(state, music)?;
-    if quit {
-        save_progress(state)?;
-    }
+    run_hub(state, music)?;
+    save_progress(state)?;
     Ok(())
 }

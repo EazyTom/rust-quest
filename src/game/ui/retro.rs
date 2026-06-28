@@ -39,6 +39,7 @@ pub fn pad_center(text: &str) -> String {
 }
 
 /// Center `plain`, then swap `needle` for its styled ANSI version (same visible width).
+/// LEARN: pad with plain text first — ANSI escape codes must not affect column math.
 fn center_and_style(plain: &str, needle: &str, styled: &str) -> String {
     pad_center(plain).replacen(needle, styled, 1)
 }
@@ -134,7 +135,7 @@ fn title_line_styled() -> String {
 }
 
 fn horizontal_rule_len() -> usize {
-    // Side row is: `║` + space + inner + space + `║` → inner + 4 columns total.
+    // LEARN: top/bottom use `═`.repeat(this); side rows add 4 columns of border + padding.
     BOX_INNER_WIDTH + 2
 }
 
@@ -160,7 +161,7 @@ fn menu_ornament() -> String {
     format!("◆{}◆", "─".repeat(w.saturating_sub(2)))
 }
 
-/// Bordered main menu header with ornaments above and below.
+/// Bordered main menu header — decorative frame; dialoguer renders the live selection below.
 pub fn main_menu_frame() -> String {
     let title = if terminal::use_emoji() {
         "⚔️  Main Menu  🕯️"
@@ -168,15 +169,15 @@ pub fn main_menu_frame() -> String {
         "Main Menu"
     };
     let hint = if terminal::use_emoji() {
-        "↑/↓ choose  ·  Enter  ·  Esc back"
+        "↑/↓ choose  ·  Enter  ·  Esc quit"
     } else {
-        "Up/Down  ·  Enter  ·  Esc back"
+        "Up/Down  ·  Enter  ·  Esc quit"
     };
     let rule = menu_ornament().bright_magenta();
     format!(
         "\n{}\n{}\n{}\n{}\n{}",
         rule,
-        box_top_centered(title),
+        box_top(title),
         box_line_styled(hint, |s| s.bright_white().dimmed()),
         box_bottom(),
         rule

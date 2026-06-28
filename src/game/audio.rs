@@ -20,7 +20,7 @@ pub enum MusicMode {
     /// Always play the saved track until the player picks another or mutes.
     #[default]
     Fixed,
-    /// Rotate to the next track each time the player enters a quest from the map.
+    /// Rotate to the next track each time the player starts a quest (not when opening the map).
     CycleOnQuest,
 }
 
@@ -101,9 +101,13 @@ impl MusicHandle {
         music.play_stem(&stem);
     }
 
-    /// Advance cycle when entering a quest from the map.
-    pub fn cycle_on_quest(state: &mut GameState, music: &MusicHandle) {
-        if state.music_muted || state.music_mode != MusicMode::CycleOnQuest {
+    /// Rotate to the next track when a quest room opens (cycle mode only).
+    /// LEARN: pinned [`MusicMode::Fixed`] must not call `play_stem` — that restarts from 0:00.
+    pub fn on_quest_start(state: &mut GameState, music: &MusicHandle) {
+        if state.music_muted {
+            return;
+        }
+        if state.music_mode == MusicMode::Fixed {
             return;
         }
         let Some(stem) = next_in_cycle(&state.music_last_stem) else {
@@ -112,6 +116,11 @@ impl MusicHandle {
         state.music_last_stem = stem.clone();
         state.music_playing_stem = stem.clone();
         music.play_stem(&stem);
+    }
+
+    #[deprecated(note = "use on_quest_start")]
+    pub fn cycle_on_quest(state: &mut GameState, music: &MusicHandle) {
+        Self::on_quest_start(state, music);
     }
 
     /// Resume playback after unmute (does not advance cycle).
@@ -325,6 +334,31 @@ mod tests {
             stem = next_in_cycle(&stem).unwrap();
         }
         assert_eq!(stem, first);
+    }
+
+    #[test]
+    fn fixed_mode_on_quest_start_keeps_pinned_stem() {
+        let mut state = GameState::default();
+        state.music_mode = MusicMode::Fixed;
+        state.music_track = "mossy_gate".into();
+        state.music_playing_stem = "mossy_gate".into();
+        state.music_last_stem = "pixel_dungeon_drift".into();
+        MusicHandle::on_quest_start(&mut state, &MusicHandle::disabled());
+        assert_eq!(state.music_playing_stem, "mossy_gate");
+        assert_eq!(state.music_track, "mossy_gate");
+    }
+
+    #[test]
+    fn cycle_mode_on_quest_start_advances() {
+        let tracks = discover_tracks();
+        assert!(tracks.len() >= 2);
+        let mut state = GameState::default();
+        state.music_mode = MusicMode::CycleOnQuest;
+        state.music_last_stem = tracks[0].stem.clone();
+        state.music_playing_stem = tracks[0].stem.clone();
+        MusicHandle::on_quest_start(&mut state, &MusicHandle::disabled());
+        assert_ne!(state.music_playing_stem, tracks[0].stem);
+        assert_eq!(state.music_playing_stem, tracks[1].stem);
     }
 
     #[test]

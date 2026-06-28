@@ -1,4 +1,6 @@
 //! Quest 4 — Structs, enums, and pattern matching.
+//!
+//! LEARN: custom enums (QuestStatus) mirror std enums like Option<T> — same match rules.
 
 use crate::game::quiz::QuizQuestion;
 use crate::resources::links::ResourceLinks;
@@ -16,7 +18,7 @@ pub fn demo() -> String {
     out.push_str("=== Structs, Enums & Pattern Matching ===\n\n");
     out.push_str(
         "Structs group related data into one named type. Enums express *one of several* \
-         variants — perfect for quest states, errors, or optional values. \
+         variants — perfect for quest states like Locked, Open, or Done. \
          `match` forces you to handle every variant.\n\n",
     );
 
@@ -49,6 +51,7 @@ pub fn demo() -> String {
          The compiler errors if you forget a variant — no silent null crashes.\n\n",
     ));
 
+    // GAME: if let is sugar for match with one arm — reused on Option below.
     if let QuestStatus::Open = status {
         out.push_str(
             "Step 3 — if let (one-pattern sugar)\n  if let QuestStatus::Open = status {{ ... }}\n  \
@@ -56,48 +59,64 @@ pub fn demo() -> String {
         );
     }
 
-    out.push_str(
-        "Step 4 — Option<T> is an enum too\n  Some(value) means present, None means absent.\n  \
-         Rust has no null — you must handle None explicitly with match or if let.\n",
-    );
+    // LEARN: Option<T> is a built-in enum — preview here; the Errors quest goes deeper.
+    let bonus_xp: Option<u32> = Some(25);
+    let no_bonus: Option<u32> = None;
+    let bonus_label = match bonus_xp {
+        Some(xp) => format!("bonus +{xp} XP"),
+        None => "no bonus".to_string(),
+    };
+    out.push_str(&format!(
+        "Step 4 — Option<T> preview (enum in the standard library)\n  \
+         Rust has no null. Instead, Option<T> is an enum with two variants:\n  \
+           • Some(value) — a value is present\n  \
+           • None       — no value (like \"missing loot\")\n  \
+         let bonus_xp: Option<u32> = Some(25);\n  \
+         let no_bonus: Option<u32> = None;\n  \
+         match bonus_xp → \"{bonus_label}\"; no_bonus = {no_bonus:?}\n\n",
+    ));
+
+    if let Some(xp) = bonus_xp {
+        out.push_str(&format!(
+            "Step 5 — same patterns on Option\n  if let Some(xp) = bonus_xp → xp is {xp}\n  \
+             match must handle both Some and None — same rule as QuestStatus.\n  \
+             (The Errors quest teaches Result and ?; Collections uses Option from HashMap::get.)\n",
+        ));
+    }
     out
 }
 
 pub const MEMORY: &str =
-    "match must cover all enum variants — no null pointer surprises at runtime.";
+    "Enums hold one variant at a time — match (or if let) must cover every case, \
+     including Option's Some and None.";
 
 static Q1: QuizQuestion = QuizQuestion::new(
-    "Option<T> replaces…",
+    "What does an enum like QuestStatus represent?",
     &[
-        "Exceptions",
-        "Nullable pointers without safety",
-        "Garbage collection",
-        "Macros only",
+        "Many variants at the same time",
+        "Exactly one of several variants",
+        "Only numeric literals",
+        "A module import path",
     ],
     1,
-    "Some(T) and None are the two variants.",
-    "Option models absence explicitly in the type system.",
+    "A value is Locked, Open, or Done — never all three.",
+    "An enum value is always one variant, e.g. QuestStatus::Open.",
 );
 
 static Q2: QuizQuestion = QuizQuestion::new(
-    "match must be…",
+    "Option<T> has which two variants?",
+    &["Ok and Err", "Some and None", "True and False", "Left and Right"],
+    1,
+    "Step 4 in Learn: Some(value) when present, None when absent.",
+    "Option<T> is an enum: Some(T) or None — Rust's replacement for null.",
+);
+
+static Q3: QuizQuestion = QuizQuestion::new(
+    "match on an enum must be…",
     &["Partial", "Exhaustive", "Runtime only", "Unsafe"],
     1,
     "Compiler checks all variants handled.",
     "Exhaustive matching catches missing cases at compile time.",
-);
-
-static Q3: QuizQuestion = QuizQuestion::new(
-    "impl block is used to…",
-    &[
-        "Import modules",
-        "Add methods to a type",
-        "Start threads",
-        "Open files",
-    ],
-    1,
-    "Similar to methods on a type.",
-    "impl defines associated functions and methods.",
 );
 
 static BOSS: QuizQuestion = QuizQuestion::new(

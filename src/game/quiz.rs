@@ -24,6 +24,8 @@ pub struct PresentedQuestion {
     pub correct: usize,
     pub hint: &'static str,
     pub explanation: &'static str,
+    /// Display indices that pick an unwrap() answer (for achievements).
+    bad_unwrap_indices: Vec<usize>,
 }
 
 impl QuizQuestion {
@@ -50,9 +52,13 @@ impl QuizQuestion {
         let offset = shuffle_offset(quest_id, question_index, self.prompt) % n;
         let mut choices = Vec::with_capacity(n);
         let mut correct = 0;
+        let mut bad_unwrap_indices = Vec::new();
         for display_idx in 0..n {
             let src = (display_idx + offset) % n;
             choices.push(self.choices[src]);
+            if self.choices[src].contains("unwrap()") {
+                bad_unwrap_indices.push(display_idx);
+            }
             if src == self.correct {
                 correct = display_idx;
             }
@@ -63,6 +69,7 @@ impl QuizQuestion {
             correct,
             hint: self.hint,
             explanation: self.explanation,
+            bad_unwrap_indices,
         }
     }
 }
@@ -72,10 +79,9 @@ impl PresentedQuestion {
         self.choices.clone()
     }
 
-    pub fn is_unwrap_pick(&self, selected: usize) -> bool {
-        self.choices
-            .get(selected)
-            .is_some_and(|c| c.contains("unwrap()"))
+    /// GAME: tracks NoPanic achievement — true when player picks a shuffled unwrap() option.
+    pub fn is_bad_unwrap_pick(&self, selected: usize) -> bool {
+        self.bad_unwrap_indices.contains(&selected)
     }
 }
 
@@ -128,6 +134,25 @@ pub fn score_presented(questions: &[PresentedQuestion], answers: &[usize]) -> bo
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bad_unwrap_pick_tracks_unwrap_choice() {
+        let mut q = QuizQuestion::new(
+            "pick?",
+            &["unwrap()", "match", "?", "panic"],
+            1,
+            "h",
+            "e",
+        );
+        q.is_bad_unwrap_choice = true;
+        let p = q.present("errors", 0);
+        let unwrap_idx = p
+            .choices
+            .iter()
+            .position(|c| c.contains("unwrap()"))
+            .expect("unwrap choice");
+        assert!(p.is_bad_unwrap_pick(unwrap_idx));
+    }
 
     #[test]
     fn three_of_four_passes() {

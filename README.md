@@ -1,16 +1,18 @@
 # Rust Quest 🧙⚔️
 
-> **Dedicated to Ayush** — built to help you learn Rust by playing a game and reading the source. You've got this. 🏆
-
-🕯️ *The Dungeon Master speaks:* Shadows of bad code creep across the **Kingdom of Rust**. Only a brave hero who masters ownership, traits, and the borrow checker can restore the realm. Sync this repo, run `cargo run`, and step through the mossy gate — your legend begins at the hub campfire.
+**Version 1.0.0**
 
 A retro terminal adventure that teaches Rust through **14 quests**, runnable demos, quizzes, ranks, dungeon bosses, and links to official docs. The codebase is heavily commented so you can learn *how the game works* while learning *how Rust works*.
 
-**Your kit:** 🧙 wizard · ⚔️🛡️ combat · 🕯️ torchlight · 📜 scrolls · 🧭🗺️ quest map · 💣 logic bombs · 🔥 streak flame · 🎲 Dungeon Master
+🕯️ *The Dungeon Master speaks:* Shadows of bad code creep across the **Kingdom of Rust**. Only a brave hero who masters ownership, traits, and the borrow checker can restore the realm. Sync this repo, run `cargo run`, and step through the mossy gate — your legend begins at the hub campfire.
+
+> **Version:** `[package].version` in [`Cargo.toml`](Cargo.toml) is the source of truth (currently **1.0.0**). The hub reads it via [`src/version.rs`](src/version.rs). Releases are bumped by the [**Bump version**](./.github/workflows/bump-version.yml) GitHub Action — no binaries are published; clone and `cargo run`.
+
+**Your kit:** 🧙 wizard · ⚔️🛡️ combat · 🕯️ torchlight · 📜 scrolls · 🧭🗺️ quest map · 💣 logic bombs · 🔥 streak flame · 🎲 Dungeon Master · ❤️ hearts
 
 ---
 
-## Quick start — answer the call
+## Quick Start — Answer the call
 
 **Prerequisites:** [rustup](https://rustup.rs/) (includes `cargo`). Use **Windows Terminal**, **WezTerm**, or **iTerm2** for emoji and colors.
 
@@ -26,61 +28,119 @@ On first launch you enter the **hub** with a **🎲 Dungeon Master** intro invit
 
 **Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md). **AI / agent contributors:** see [AGENTS.md](AGENTS.md) for architecture, save format, and safe edit boundaries.
 
+> **Dedicated to Ayush** — built to help you learn Rust by playing a game and reading the source. You've got this. 🏆
+
+
 ---
 
-## What's new
+## What's New
+
+<!-- bump-release:whats-new -->
+
+### v1.0.0 — 2026-06-27
+
+**Gameplay & systems**
+
+- Hearts vitality system (quiz, healing potions, save schema v6)
+- Background music with fixed, cycle-on-quest, and mute modes
+- Auto-chain to the next quest after passing a challenge
+
+**Progress & save**
+
+- Versioned JSON progress with music and hearts persistence
+
+**Quests & learning**
+
+- 14 quests with demos, shuffled quizzes, and boss questions
+
+**Story & narrative**
+
+- Dungeon Master hub intro, per-quest rooms, four epic phase bosses
+
+See [Game Features (v1.0.0)](#game-features-v100) for the full catalog.
+
+---
+
+## Game Features (v1.0.0)
+
+### Core learning loop
 
 | Feature | What it does |
 |---------|----------------|
-| 🎲 **Dungeon Master hub intro** | Welcome lore for new heroes; story nudge toward your next quest when you return |
-| 🧙⚔️ **Title banner** | Centered **RUST QUEST** — bold red on cyan, wizard and swords framing the subtitle |
-| ⚔️🕯️ **Main Menu frame** | Cyan box with magenta ornaments; sword and candle flank the menu title |
-| 🕯️📜 **MUD narrative rooms** | Per-quest room copy, foes, and DM lines in [`src/game/narrative.rs`](src/game/narrative.rs) |
-| ⚔️🛡️💣 **Combat-flavored quizzes** | Colored strike/miss copy, tavern cheers on victory |
-| 🎼 **Background music** | MP3 tracks in `assets/music/` — fixed track, cycle-on-quest, or mute (saved) |
-| ☕ **Campfire farewell** | MUD-style quit box when you leave the dungeon |
-| 📖 **Book study guide** | Hub menu gaps list with book links for topics outside the 14 quests |
-| 👑 **Epic dungeon bosses** | Four phase bosses after each arc — mixed quizzes, bonus XP |
+| **14 quests** | Cargo → Advanced Cargo; sequential unlock, demos, memory-safety notes, official doc links |
+| **Learn / Challenge / Resources** | Study runes (+15 XP once), quiz foe (+25 XP), open book & video scrolls in-browser |
+| **Quest map** | Crossterm map — pick rooms, auto-chain to the next quest after a passed challenge |
+| **Sandbox** | Replay any quest demo without XP pressure |
+| **Practice mode** | **Unlock All** skips the sequential lock for replay |
+| **14 `cargo run --example …`** | Standalone runnable demos per topic |
+
+### Quizzes, hearts & bosses
+
+| Feature | What it does |
+|---------|----------------|
+| **Challenge quizzes** | 4 questions per quest (3 + boss); choices shuffled; **≥75%** to pass |
+| **Hearts (vitality)** | Start with 3 ❤️ (max 5); wrong answers −1, correct +1; saved in progress |
+| **Weakened state** | At 0 hearts you cannot fight — DM directs you to heal first |
+| **Healing potions** | Restore hearts via **Learn**, **Resources** links, post-quiz book chapters, book study guide |
+| **Epic dungeon bosses** | Four phase bosses after each arc — mixed boss quizzes, **+50 bonus XP** |
+| **Achievements** | e.g. No Panic, Borrow Slayer, phase boss clears, Full Stack Rustacean |
+
+### Progress & persistence
+
+| Feature | What it does |
+|---------|----------------|
+| **10 ranks** | Initiate → Champion; tied to **quest completion**, not XP alone |
+| **XP bar & streak** | XP once per learn/challenge step; 🔥 streak for consecutive play days |
+| **JSON save** | `.rust-test/progress.json` — versioned schema with migrations (hearts, music, bosses, …) |
+| **Champion victory** | One-time celebration when all 14 quests are cleared |
+| **Book study guide** | Hub menu list of book topics outside the 14 quests, with links |
+
+### Story & narrative
+
+| Feature | What it does |
+|---------|----------------|
+| **Dungeon Master hub intro** | Welcome lore for new heroes; nudge toward the next unfinished quest on return |
+| **Per-quest rooms** | Room arrival, foe taunts, learn/challenge copy in [`narrative.rs`](src/game/narrative.rs) |
+| **Four epic phases** | The Cellar, Archives, Forge, Summit — each with a named boss and book chapter tie-in |
+| **Post-quiz book prompt** | Offer The Rust Book chapter after a pass (defaults **Yes** if any answer was wrong) |
+
+### Resources & Audio
+
+| Feature | What it does |
+|---------|----------------|
+| **Resource browser** | Per-quest Rust Book, Rust by Example, std docs, YouTube — hub or in-quest |
+| **Background music** | MP3 auto-discovery in `assets/music/` — **fixed** track, **cycle on quest start**, or **mute** (saved) |
+| **Pinned track** | Fixed mode keeps playing across quests without restarting from 0:00 |
 
 Full agent-oriented details: **[AGENTS.md](AGENTS.md)**.
 
 ---
 
-## How it works
+## Planned Features
 
-```mermaid
-flowchart TD
-    Hub["Rust Quest Hub"]
-    DM["Dungeon Master intro"]
-    Map["Quest Map"]
-    Room["Room arrival and foe"]
-    Learn["Learn: demo and memory note"]
-    Challenge["Challenge: 3 questions and boss"]
-    Reward["XP, rank, and victory cheer"]
-    Hint["Hints and retry docs"]
-    Resources["Resources: book and video scrolls"]
-    Practice["Unlock All practice mode"]
+| Priority | Feature | Goal |
+|----------|---------|------|
+| 🔮 | **More lore** | Deeper DM copy, room descriptions, phase and boss storylines |
+| 🔮 | **Richer quizzes & bosses** | Harder questions, varied boss mechanics, better feedback tied to mistakes |
+| 🔮 | **Broader topic coverage** | Stronger beginner → intermediate path (and room to grow beyond) |
+| 🔮 | **Difficulty setting** | **Easy / Normal / Hard** — select beginner, intermediate, or advanced topic depth per run |
 
-    Hub --> DM
-    DM --> Map
-    Map --> Room
-    Room --> Learn
-    Learn --> Challenge
-    Challenge -->|"pass 75% or higher"| Reward
-    Challenge -->|fail| Hint
-    Reward --> Hub
-    Hub --> Resources
-    Hub --> Practice
-```
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## How to play
+
+*Main Menu - Hub (Player stats, Dungeon Master intro, hearts) wraps every return to the Main Menu. Pick quest steps in any order; Learn before Challenge is recommended.*
+
+**Hub menu:** 🧭 Quest Map · 📜 Resources · 🛠️ Sandbox · 📖 Book study guide · 🔓 Unlock All · 💾 Reset · 🎼 Music · ☕ Quit
 
 Each quest follows four steps:
 
-1. **💡 Learn** — see Rust concepts run with explanations
-2. **⚔️ Challenge** — 4 questions (3 + boss); need **≥75%** to pass
-3. **🔥 Reward** — XP (once per step), rank checks, badges
-4. **📖 Explore** — optional links in your browser
-
-**Hub menu:** 🧭 Quest Map · ❤️ Profile · 📜 Resources · 🛠️ Sandbox · 📖 Book study guide · 🔓 Unlock All · 💾 Reset · 🎼 Music · ☕ Quit
+1. **💡 Learn** — see Rust concepts run with explanations (+15 XP once; lore potion when weakened)
+2. **⚔️ Challenge** — 4 questions (3 + boss); need **≥75%** to pass; hearts rise and fall with answers
+3. **🔥 Reward** — XP, rank checks, achievements; auto-advance to the next quest on pass
+4. **📖 Explore** — optional links in your browser (scrolls also restore hearts when below max)
 
 Background music plays from `assets/music/` (MP3). Choose a fixed track or **cycle per quest** from the Music menu; mute is saved separately.
 
@@ -88,7 +148,7 @@ Background music plays from `assets/music/` (MP3). Choose a fixed track or **cyc
 
 ---
 
-## Quest map (14 quests)
+## Quest Map (14 quests)
 
 | # | Quest | Topics |
 |---|-------|--------|
@@ -111,7 +171,7 @@ Quests unlock in order. **🔓 Unlock All** lets you practice without waiting.
 
 ---
 
-## Epic phases & dungeon bosses
+## Epic phases & Dungeon Bosses
 
 Quests are grouped into **four story arcs** tied to [The Rust Book](https://doc.rust-lang.org/book/). When you finish the last quest in a phase, a **dungeon boss** fight unlocks — a mixed quiz using each quest’s boss question from that phase (≥75% to win, +50 bonus XP).
 
@@ -128,7 +188,7 @@ Complete all **14 quests** to become **👑 Rust Quest Champion** — a full vic
 
 ---
 
-## Ranks & progress
+## Ranks & Progress
 
 Ranks unlock when you **complete** quests (challenge passed), not from XP alone.
 
@@ -145,11 +205,11 @@ Ranks unlock when you **complete** quests (challenge passed), not from XP alone.
 | 🗂️ Module Architect | Complete Modules & Prelude |
 | 👑 Rust Quest Champion | Complete all 14 quests |
 
-XP (+15 learn, +25 challenge) fills a progress bar. **🔥 Streak** counts consecutive days you complete a step. Progress file: `.rust-test/progress.json` (safe to delete to start over).
+XP (+15 learn, +25 challenge) fills a progress bar. **❤️ Hearts** (3–5) track quiz vitality — heal via Learn, Resources, or book chapters. **🔥 Streak** counts consecutive days you complete a step. Progress file: `.rust-test/progress.json` (schema v6; safe to delete to start over).
 
 ---
 
-## In-game resources (📜 hub menu)
+## In-game Resources (📜 hub menu)
 
 From the hub, open **📜 Resources — open lore scrolls** to launch browser links per quest — the same scrolls available inside each quest’s **📖 Consult scrolls** step.
 
@@ -203,13 +263,14 @@ Examples exist for every quest: `cargo run --example cargo`, `--example types`, 
 
 ```text
 .
-├── Cargo.toml
+├── Cargo.toml             ← bump [package].version for releases (currently 1.0.0)
 ├── README.md
 ├── CONTRIBUTING.md
 ├── AGENTS.md              ← architecture for AI agents
 ├── assets/music/          ← background MP3 tracks
 ├── src/
 │   ├── main.rs
+│   ├── version.rs         ← VERSION from Cargo.toml
 │   ├── game/
 │   │   ├── hub.rs         ← hub + menus
 │   │   ├── narrative.rs   ← DM room lore

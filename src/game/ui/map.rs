@@ -73,15 +73,8 @@ pub fn initial_map_selection(state: &GameState) -> usize {
 
 fn prepare_terminal_for_map() -> io::Result<()> {
     // LEARN: dialoguer uses cooked mode; reset before crossterm raw mode so keys work.
-    let _ = crossterm_terminal::disable_raw_mode();
-    let mut stdout = io::stdout();
-    execute!(
-        stdout,
-        crossterm_terminal::Clear(crossterm_terminal::ClearType::All),
-        cursor::MoveTo(0, 0)
-    )?;
-    stdout.flush()?;
-    Ok(())
+    // GAME: also clears hub text when entering (or re-entering) the quest map.
+    super::input::clear_screen()
 }
 
 fn next_selectable(state: &GameState, from: usize, delta: i32) -> usize {
@@ -114,9 +107,7 @@ fn render_map(state: &GameState, selected: usize) -> io::Result<()> {
     let nodes = map_nodes();
     for (i, node) in nodes.iter().enumerate() {
         let status = node_status(state, node.quest_id);
-        let dungeon_door = if status == NodeStatus::Locked
-            || epic::dungeon_ready_at(state, node.quest_id)
-        {
+        let dungeon_door = if epic::dungeon_ready_at(state, node.quest_id) {
             "🚪"
         } else {
             ""
@@ -170,9 +161,12 @@ pub fn run_quest_map(state: &GameState) -> io::Result<Option<&'static str>> {
     crossterm_terminal::enable_raw_mode()?;
     let result = quest_map_loop(state);
     crossterm_terminal::disable_raw_mode()?;
+    // GAME: drain Enter/Esc so the hub dialoguer menu does not auto-select Quest Map.
+    super::input::drain_pending_keys_quiet();
     result
 }
 
+/// GAME: arrow-key loop — Esc returns None (back to hub), Enter enters the highlighted quest.
 fn quest_map_loop(state: &GameState) -> io::Result<Option<&'static str>> {
     let nodes = map_nodes();
     let mut selected = initial_map_selection(state);

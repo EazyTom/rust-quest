@@ -1,9 +1,25 @@
 //! Encouragement messages and rank-up copy — retro MUD / dungeon-master voice.
+//!
+//! GAME: keep strings here so hub/narrative stay free of hard-coded player-facing prose.
 
 use crate::game::xp::Rank;
 
 pub fn quiz_fail() -> &'static str {
     "The foe stands — study the scrolls and strike again!"
+}
+
+pub fn book_chapter_prompt(quest_title: &str) -> String {
+    format!("📖 Open The Rust Book chapter for {quest_title}?")
+}
+
+pub fn next_quest_guidance(quest_emoji: &str, quest_title: &str, room_name: &str) -> String {
+    format!(
+        "🧭 The path opens to {quest_emoji} {quest_title} — {room_name}. Onward!"
+    )
+}
+
+pub fn all_quests_cleared() -> &'static str {
+    "Every quest room is cleared — revisit the map or train in the hub."
 }
 
 pub fn quiz_pass() -> &'static str {
@@ -71,6 +87,36 @@ pub fn challenge_paused() -> &'static str {
 
 pub fn wrong_answer_hint() -> &'static str {
     "💡 Glancing blow! The Dungeon Master offers a hint…"
+}
+
+pub fn heart_gained() -> &'static str {
+    "❤️ A true strike — warmth returns to thy veins!"
+}
+
+pub fn heart_lost(current: u32) -> String {
+    if current == 0 {
+        "💔 Thy strength fails — the healers' potions run dry!".to_string()
+    } else {
+        format!("💔 A wound lands — {current} heart(s) remain.")
+    }
+}
+
+pub fn hearts_depleted() -> &'static str {
+    "🧪 Thou art weakening! Study runes (Learn), open book chapters (Resources), or read \
+     quest scrolls for a healing potion — then return to face the foe."
+}
+
+pub fn too_weakened_to_fight() -> &'static str {
+    "🧪 The Dungeon Master stays thy hand — thou art too weak to fight. \
+     Study runes (Learn) or consult Resources / book chapters for a potion, then strike again."
+}
+
+pub fn lore_potion() -> &'static str {
+    "🧪 The healers brew a lore potion from the scrolls — one heart restored!"
+}
+
+pub fn resource_potion() -> &'static str {
+    "📖 Thy reading distills a healing draught from the scrolls — one heart restored!"
 }
 
 pub fn memory_safety_header() -> &'static str {

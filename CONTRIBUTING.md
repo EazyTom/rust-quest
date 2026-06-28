@@ -131,6 +131,22 @@ If you add persisted fields:
 
 Never store saves outside `.rust-test/` under the project root.
 
+### Release version (GitHub Action)
+
+App semver lives in `Cargo.toml` only — there are **no published binaries**; players clone and `cargo run`.
+
+To cut a release:
+
+1. Merge gameplay changes to the default branch.
+2. Run **Actions → Bump version → Run workflow**.
+3. Choose **patch** / **minor** / **major** (use **dry run** first to preview).
+4. The workflow runs [`scripts/bump_release.py`](scripts/bump_release.py), which:
+   - Increments `[package].version` in `Cargo.toml` and syncs `Cargo.lock`
+   - Prepends a **What's New** entry in `README.md` from commits since the previous `v*.*.*` tag (gameplay paths only; skips cosmetic-only UI edits)
+   - Commits, tags `vX.Y.Z`, and pushes
+
+Tag the current `1.0.0` baseline once manually if this is the first release: `git tag -a v1.0.0 -m "rust-quest v1.0.0"`.
+
 ---
 
 ## Code style

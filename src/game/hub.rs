@@ -13,7 +13,7 @@ use crate::game::progress;
 use crate::game::audio::{self, MusicHandle, MusicMode};
 use crate::game::quiz::{PresentedQuestion, QuizQuestion, score_presented};
 use crate::game::state::{GameState, QuestStep, StepResult, today_string};
-use crate::game::ui::{copy, retro, run_quest_map};
+use crate::game::ui::{copy, input, retro, run_quest_map};
 use crate::game::xp::{self, XP_CHALLENGE, XP_DUNGEON_BOSS};
 use crate::resources::links::open_url;
 use crate::topics::registry::{self, Quest};
@@ -22,7 +22,7 @@ fn dialoguer_err(e: dialoguer::Error) -> io::Error {
     io::Error::other(e.to_string())
 }
 
-/// Esc / q returns `None` — always treat as Back. Quiz menus default to first choice.
+/// Esc cancels dialoguer (`None`). Callers decide: hub menu Esc quits; quest step Esc returns to map.
 fn select_menu(prompt: &str, items: &[&str]) -> io::Result<Option<usize>> {
     Select::new()
         .with_prompt(prompt)
@@ -41,12 +41,102 @@ fn confirm_menu(prompt: &str, default: bool) -> io::Result<Option<bool>> {
 }
 
 fn quest_map_session(state: &mut GameState, music: &MusicHandle) -> io::Result<()> {
-    // GAME: map → quest → map until Esc from the map returns to hub.
-    while let Some(quest_id) = run_quest_map(state)? {
-        MusicHandle::cycle_on_quest(state, music);
-        run_quest(state, quest_id)?;
+    // GAME: map → auto-chain quests after quiz pass → map when Esc from map or quest menu.
+    input::clear_screen_quiet();
+    while let Some(first_id) = run_quest_map(state)? {
+        let mut quest_id = first_id;
+        loop {
+            match run_quest(state, quest_id, music)? {
+                Some(next_id) => quest_id = next_id,
+                None => {
+                    // GAME: Esc from quest steps — clear room output before the map redraws.
+                    input::clear_screen_quiet();
+                    break;
+                }
+            }
+        }
+    }
+    // GAME: Esc from map — clear before hub redraw so map tiles do not linger above the banner.
+    input::clear_screen_quiet();
+    input::drain_pending_keys_quiet();
+    Ok(())
+}
+
+/// GAME: after a quiz pass, offer the Rust Book — default Yes when any answer was wrong.
+fn offer_quest_book(state: &mut GameState, quest: &Quest, any_wrong: bool) -> io::Result<()> {
+    if confirm_menu(&copy::book_chapter_prompt(quest.title), any_wrong)?.unwrap_or(false) {
+        open_url(quest.links.book);
+        grant_healing_from_resources(state);
     }
     Ok(())
+}
+
+fn grant_healing_potion(state: &mut GameState, message: &str) {
+    if state.drink_lore_potion() {
+        println!("{}", retro::dungeon_master_says(message));
+    }
+}
+
+fn grant_healing_from_resources(state: &mut GameState) {
+    grant_healing_potion(state, copy::resource_potion());
+}
+
+fn print_next_quest_guidance(next: Quest) {
+    println!();
+    let line = narrative::encounter_for(next)
+        .map(|enc| copy::next_quest_guidance(next.emoji, next.title, enc.room_name))
+        .unwrap_or_else(|| format!("🧭 Onward to {} {}!", next.emoji, next.title));
+    println!("{}", retro::dungeon_master_says(&line));
+}
+
+/// GAME: one quiz strike — bright prompt + dialoguer choices; Esc pauses the fight.
+fn ask_quiz_question(q: &PresentedQuestion, round_label: &str) -> io::Result<Option<usize>> {
+    println!("\n{}", round_label);
+    println!("{}", q.prompt.bright_white());
+    let labels = q.choice_labels();
+    let label_refs: Vec<&str> = labels.iter().copied().collect();
+    select_menu("Choose (↑/↓, Enter)", &label_refs)
+}
+
+fn print_answer_result(q: &PresentedQuestion, idx: usize, verbose_miss: bool) {
+    if idx != q.correct {
+        println!("{}", retro::combat_miss());
+        if verbose_miss {
+            println!("{}", copy::wrong_answer_hint().yellow());
+        }
+        println!("Hint: {}", q.hint.yellow());
+        println!("{}", q.explanation.dimmed());
+    } else {
+        println!("{}", retro::combat_hit());
+    }
+}
+
+fn apply_quiz_heart(state: &mut GameState, correct: bool) {
+    if correct {
+        if state.gain_heart() {
+            println!("{}", retro::success(copy::heart_gained()));
+        }
+    } else {
+        state.lose_heart();
+        println!("{}", copy::heart_lost(state.hearts).bright_red());
+        if state.is_weakened() {
+            println!("{}", retro::dungeon_master_says(copy::hearts_depleted()));
+        }
+    }
+}
+
+fn quest_combat_label(
+    question_index: usize,
+    regular_count: usize,
+    enc: Option<&narrative::QuestEncounter>,
+) -> String {
+    if question_index < regular_count {
+        retro::combat_round(question_index + 1, regular_count + 1)
+    } else if let Some(e) = enc {
+        retro::final_gambit(e.enemy_emoji, e.enemy_name)
+    } else {
+        retro::final_gambit("💀", "Room Boss")
+    }
 }
 
 fn print_farewell(state: &GameState) {
@@ -58,7 +148,7 @@ fn print_farewell(state: &GameState) {
     println!("{}\n", retro::box_bottom());
 }
 
-pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
+pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<()> {
     if state.player_name.is_empty() {
         let name: String = Input::new()
             .with_prompt("🎲 Dungeon Master: State thy name, adventurer")
@@ -66,6 +156,8 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
             .interact_text()
             .map_err(dialoguer_err)?;
         state.player_name = name;
+        // GAME: Enter after name entry must not auto-pick Quest Map on the first hub menu.
+        input::drain_pending_keys_quiet();
     }
 
     if state.is_champion() && !state.victory_celebrated {
@@ -75,6 +167,7 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
     }
 
     loop {
+        input::clear_screen_quiet();
         print_hub(state);
         print_hub_adventure_intro(state);
         if state.is_champion() {
@@ -88,7 +181,6 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
         println!("{}", retro::main_menu_frame());
         let choices = &[
             "🧭 Quest Map — enter the dungeon",
-            "❤️ Profile — inspect thy legend",
             "📜 Resources — open lore scrolls",
             "🛠️ Sandbox — replay demo runes",
             "📖 Book study guide — gaps & next steps",
@@ -100,16 +192,16 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
         let sel = select_menu("Choose (↑/↓, Enter, Esc to quit)", choices)?;
         let Some(sel) = sel else {
             print_farewell(state);
-            return Ok(true);
+            return Ok(());
         };
 
         match sel {
             0 => quest_map_session(state, music)?,
-            1 => show_profile(state),
-            2 => resource_menu()?,
-            3 => sandbox_menu()?,
-            4 => {
+            1 => resource_menu(state)?,
+            2 => sandbox_menu()?,
+            3 => {
                 epic::print_book_gaps_guide();
+                grant_healing_from_resources(state);
                 if state.is_champion() {
                     println!(
                         "{}",
@@ -118,21 +210,21 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<bool> {
                     );
                 }
             }
-            5 => {
+            4 => {
                 state.practice_unlock_all = true;
                 println!("{}", retro::success("Practice mode: all quests unlocked."));
             }
-            6 => {
+            5 => {
                 if confirm_menu("Reset all progress?", false)?.unwrap_or(false) {
                     state.reset();
                     let _ = progress::save_progress(state);
                     println!("{}", retro::success("Progress reset."));
                 }
             }
-            7 => music_menu(state, music)?,
-            8 => {
+            6 => music_menu(state, music)?,
+            7 => {
                 print_farewell(state);
-                return Ok(true);
+                return Ok(());
             }
             _ => {}
         }
@@ -190,8 +282,15 @@ fn print_hub(state: &GameState) {
     println!(
         "{}",
         retro::box_line(&format!(
-            "Player: 🧙 {}   Rank: {} {}",
+            "Player: 🧙 {} {}",
             state.player_name,
+            state.hearts_bar()
+        ))
+    );
+    println!(
+        "{}",
+        retro::box_line(&format!(
+            "Rank: {} {}",
             rank.emoji(),
             rank.title()
         ))
@@ -205,44 +304,11 @@ fn print_hub(state: &GameState) {
     );
     let music_line = audio::status_label(state);
     println!("{}", retro::box_line(&music_line));
+    println!(
+        "{}",
+        retro::box_line(&format!("v{}", crate::version::VERSION))
+    );
     println!("{}\n", retro::box_bottom());
-}
-
-fn show_profile(state: &GameState) {
-    println!("{}", retro::section_header("❤️ Profile"));
-    println!("Name: 🧙 {}", state.player_name);
-    println!("XP: {} / {}", state.xp, xp::MAX_XP);
-    println!("Quests completed: {}/14", state.completed_quests.len());
-    if state.dungeon_bosses.len() < epic::PHASES.len() {
-        println!(
-            "Dungeon bosses: {}/{}",
-            state.dungeon_bosses.len(),
-            epic::PHASES.len()
-        );
-        for phase in epic::PHASES {
-            let mark = if epic::boss_defeated(state, phase.id) {
-                "✅"
-            } else if epic::is_phase_cleared(state, phase) {
-                "⚔️ ready"
-            } else {
-                "🔒"
-            };
-            println!(
-                "  {} {} {} ({})",
-                mark, phase.boss_emoji, phase.boss_name, phase.name
-            );
-        }
-    }
-    println!("Achievements:");
-    if state.achievements.is_empty() {
-        println!("  (none yet — play quests!)");
-    } else {
-        for id in &state.achievements {
-            if let Some((emoji, name)) = crate::game::achievements::display_name(id) {
-                println!("  {} {}", emoji, name);
-            }
-        }
-    }
 }
 
 fn sandbox_menu() -> io::Result<()> {
@@ -324,10 +390,15 @@ fn music_menu(state: &mut GameState, music: &MusicHandle) -> io::Result<()> {
 
         if sel < tracks.len() {
             state.music_mode = MusicMode::Fixed;
-            state.music_track = tracks[sel].stem.clone();
+            let stem = tracks[sel].stem.clone();
+            let changed = state.music_track != stem;
+            state.music_track = stem.clone();
             state.music_muted = false;
-            state.music_playing_stem = state.music_track.clone();
-            music.play_stem(&state.music_playing_stem);
+            state.music_playing_stem = stem.clone();
+            // GAME: only restart the sink when the pinned track actually changes.
+            if changed {
+                music.play_stem(&stem);
+            }
             println!(
                 "{}",
                 retro::success(&format!(
@@ -375,7 +446,7 @@ fn music_menu(state: &mut GameState, music: &MusicHandle) -> io::Result<()> {
     Ok(())
 }
 
-fn resource_menu() -> io::Result<()> {
+fn resource_menu(state: &mut GameState) -> io::Result<()> {
     let quests = registry::all();
     let labels: Vec<String> = quests
         .iter()
@@ -386,11 +457,11 @@ fn resource_menu() -> io::Result<()> {
     let Some(idx) = idx else {
         return Ok(());
     };
-    open_links_menu(&quests[idx])?;
+    open_links_menu(state, &quests[idx])?;
     Ok(())
 }
 
-fn open_links_menu(quest: &Quest) -> io::Result<()> {
+fn open_links_menu(state: &mut GameState, quest: &Quest) -> io::Result<()> {
     let items = &[
         "📖 The Rust Book",
         "📜 Rust by Example",
@@ -403,11 +474,18 @@ fn open_links_menu(quest: &Quest) -> io::Result<()> {
             break;
         };
         match sel {
-            0 => open_url(quest.links.book),
-            1 => open_url(quest.links.rust_by_example),
+            0 => {
+                open_url(quest.links.book);
+                grant_healing_from_resources(state);
+            }
+            1 => {
+                open_url(quest.links.rust_by_example);
+                grant_healing_from_resources(state);
+            }
             2 => {
                 if let Some(u) = quest.links.std_docs {
                     open_url(u);
+                    grant_healing_from_resources(state);
                 } else {
                     println!("No std doc link for this quest.");
                 }
@@ -415,6 +493,7 @@ fn open_links_menu(quest: &Quest) -> io::Result<()> {
             3 => {
                 if let Some(u) = quest.links.youtube.first() {
                     open_url(u);
+                    grant_healing_from_resources(state);
                 }
             }
             _ => {}
@@ -423,14 +502,21 @@ fn open_links_menu(quest: &Quest) -> io::Result<()> {
     Ok(())
 }
 
-fn run_quest(state: &mut GameState, quest_id: &str) -> io::Result<()> {
+fn run_quest(
+    state: &mut GameState,
+    quest_id: &str,
+    music: &MusicHandle,
+) -> io::Result<Option<&'static str>> {
     let Some(quest) = registry::find(quest_id) else {
-        return Ok(());
+        return Ok(None);
     };
     if !state.is_unlocked(quest_id) {
         println!("{}", retro::failure(copy::quest_locked()));
-        return Ok(());
+        return Ok(None);
     }
+
+    // GAME: cycle mode advances the track when a quest room opens — pinned fixed mode is a no-op.
+    MusicHandle::on_quest_start(state, music);
 
     narrative::print_room_arrival(quest);
 
@@ -440,6 +526,7 @@ fn run_quest(state: &mut GameState, quest_id: &str) -> io::Result<()> {
         "⚔️ Face the foe — quiz encounter",
         "📖 Consult scrolls — book & video links",
     ];
+    // GAME: Learn / Challenge / Resources until Esc (map) or quiz pass chains to next quest.
     loop {
         let header = if let Some(e) = enc {
             format!("{} {} · {}", quest.emoji, e.room_name, quest.title)
@@ -449,16 +536,24 @@ fn run_quest(state: &mut GameState, quest_id: &str) -> io::Result<()> {
         println!("{}", retro::section_header(&header));
         let step = select_menu("Quest step (↑/↓, Enter, Esc back to map)", steps)?;
         let Some(step) = step else {
-            break;
+            return Ok(None);
         };
         match step {
             0 => run_learn(state, quest),
-            1 => run_challenge(state, quest)?,
-            2 => open_links_menu(&quest)?,
+            1 => {
+                if run_challenge(state, quest)? {
+                    if let Some(next) = state.next_active_quest() {
+                        print_next_quest_guidance(next);
+                        return Ok(Some(next.id));
+                    }
+                    println!("{}", retro::success(copy::all_quests_cleared()));
+                    return Ok(None);
+                }
+            }
+            2 => open_links_menu(state, &quest)?,
             _ => {}
         }
     }
-    Ok(())
 }
 
 fn run_learn(state: &mut GameState, quest: Quest) {
@@ -473,16 +568,23 @@ fn run_learn(state: &mut GameState, quest: Quest) {
         StepResult::XpGained { amount, .. } => {
             println!("{}", retro::success(&format!("+{amount} XP — {}", copy::learn_complete())));
         }
-        StepResult::RankUp { rank } => println!("{}", copy::rank_up(rank).green().bold()),
         StepResult::AlreadyDone => println!("{}", copy::learn_already().dimmed()),
-        StepResult::QuestCompleted { .. } => {}
+        StepResult::RankUp { .. } | StepResult::QuestCompleted { .. } => {}
+    }
+    if state.is_weakened() {
+        grant_healing_potion(state, copy::lore_potion());
     }
 }
 
-fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
+fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<bool> {
     if state.step_done(quest.id, QuestStep::Challenge) {
         println!("{}", copy::challenge_already().dimmed());
-        return Ok(());
+        return Ok(false);
+    }
+
+    if state.is_weakened() {
+        println!("{}", retro::dungeon_master_says(copy::too_weakened_to_fight()));
+        return Ok(false);
     }
 
     let enc = narrative::encounter_for(quest);
@@ -493,6 +595,7 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
     let mut questions: Vec<QuizQuestion> = quest.questions.to_vec();
     questions.push(quest.boss);
 
+    let regular_count = quest.questions.len();
     let presented: Vec<PresentedQuestion> = questions
         .iter()
         .enumerate()
@@ -515,51 +618,32 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
         println!();
     }
 
-    let total = presented.len();
     let mut answers = Vec::new();
     let mut any_wrong = false;
     for (i, q) in presented.iter().enumerate() {
-        let label = if i < 3 {
-            retro::combat_round(i + 1, total)
-        } else if let Some(e) = enc {
-            retro::final_gambit(e.enemy_emoji, e.enemy_name)
-        } else {
-            retro::final_gambit("💀", "Room Boss")
-        };
-        println!("\n{}", label);
-        println!("{}", q.prompt.bright_white());
-        let labels = q.choice_labels();
-        let label_refs: Vec<&str> = labels.to_vec();
-        let idx = select_menu(q.prompt, &label_refs)?;
-        let Some(idx) = idx else {
+        let label = quest_combat_label(i, regular_count, enc);
+        let Some(idx) = ask_quiz_question(q, &label)? else {
             println!("{}", copy::challenge_paused().dimmed());
-            return Ok(());
+            return Ok(false);
         };
-        if q.is_unwrap_pick(idx) {
+        if q.is_bad_unwrap_pick(idx) {
             state.errors_challenge_picked_unwrap = true;
         }
-        if idx != q.correct {
+        let correct = idx == q.correct;
+        if !correct {
             any_wrong = true;
-            println!("{}", retro::combat_miss());
-            println!("{}", copy::wrong_answer_hint().yellow());
-            println!("Hint: {}", q.hint.yellow());
-            println!("{}", q.explanation.dimmed());
-        } else {
-            println!("{}", retro::combat_hit());
         }
+        print_answer_result(q, idx, true);
+        apply_quiz_heart(state, correct);
         answers.push(idx);
     }
 
-    if any_wrong && confirm_menu("📖 Open Rust Book scroll?", true)?.unwrap_or(false) {
-        open_url(quest.links.book);
-    }
+    let passed = score_presented(&presented, &answers);
 
-    if score_presented(&presented, &answers) {
-        state.ownership_passed_first_try =
-            state.ownership_passed_first_try && quest.id == "ownership";
+    if passed {
         let rank_before = state.rank();
         let today = today_string();
-        let result = state.complete_step(quest.id, QuestStep::Challenge, &today);
+        state.complete_step(quest.id, QuestStep::Challenge, &today);
         let rank_after = state.rank();
         if let Some(e) = enc {
             println!("\n{}", retro::victory_flash(e.enemy_defeat));
@@ -571,9 +655,8 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
             "{}",
             retro::success(&format!("+{XP_CHALLENGE} XP — foe vanquished!"))
         );
-        if let StepResult::QuestCompleted { .. } = result {
-            println!("{}", retro::success("The room falls silent — onward!"));
-        }
+        // GAME: show even when rank-up replaced QuestCompleted in complete_step's return value.
+        println!("{}", retro::success("The room falls silent — onward!"));
         if rank_after != rank_before {
             println!("{}", copy::rank_up(rank_after).green().bold());
         }
@@ -584,6 +667,8 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
             epic::celebrate_champion(state);
             state.mark_victory_celebrated();
         }
+        offer_quest_book(state, &quest, any_wrong)?;
+        Ok(true)
     } else {
         if let Some(e) = enc {
             println!(
@@ -593,8 +678,11 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<()> {
         }
         println!("{}", retro::failure(copy::quiz_fail()));
         state.ownership_passed_first_try = false;
+        if any_wrong {
+            offer_quest_book(state, &quest, true)?;
+        }
+        Ok(false)
     }
-    Ok(())
 }
 
 fn try_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> io::Result<()> {
@@ -629,6 +717,10 @@ fn try_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> i
 }
 
 fn run_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> io::Result<()> {
+    if state.is_weakened() {
+        println!("{}", retro::dungeon_master_says(copy::too_weakened_to_fight()));
+        return Ok(());
+    }
     epic::print_dungeon_intro(phase);
     let raw = epic::dungeon_boss_questions(phase);
     if raw.is_empty() {
@@ -644,19 +736,12 @@ fn run_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> i
     let mut answers = Vec::new();
     for (i, q) in presented.iter().enumerate() {
         let is_final = i + 1 == presented.len();
-        println!(
-            "\n{}",
-            if is_final {
-                retro::final_gambit(phase.boss_emoji, phase.boss_name)
-            } else {
-                retro::boss_combat_round(i + 1, presented.len(), phase.boss_emoji)
-            }
-        );
-        println!("{}", q.prompt);
-        let labels = q.choice_labels();
-        let label_refs: Vec<&str> = labels.to_vec();
-        let idx = select_menu(q.prompt, &label_refs)?;
-        let Some(idx) = idx else {
+        let label = if is_final {
+            retro::final_gambit(phase.boss_emoji, phase.boss_name)
+        } else {
+            retro::boss_combat_round(i + 1, presented.len(), phase.boss_emoji)
+        };
+        let Some(idx) = ask_quiz_question(q, &label)? else {
             println!(
                 "{}",
                 "You retreat from the boss chamber — it waits in shadow."
@@ -665,13 +750,8 @@ fn run_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> i
             );
             return Ok(());
         };
-        if idx != q.correct {
-            println!("{}", retro::combat_miss());
-            println!("Hint: {}", q.hint.yellow());
-            println!("{}", q.explanation.dimmed());
-        } else {
-            println!("{}", retro::combat_hit());
-        }
+        print_answer_result(q, idx, false);
+        apply_quiz_heart(state, idx == q.correct);
         answers.push(idx);
     }
 

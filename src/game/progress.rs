@@ -9,9 +9,13 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 use super::audio::{self, MusicMode};
-use super::state::GameState;
+use super::state::{GameState, MAX_HEARTS, STARTING_HEARTS};
 
-pub const SAVE_VERSION: u32 = 5;
+pub const SAVE_VERSION: u32 = 6;
+
+fn default_hearts() -> u32 {
+    STARTING_HEARTS
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 // LEARN: #[derive(Serialize, Deserialize)] — see Testing/Docs quest; auto-implements JSON save format.
@@ -37,6 +41,8 @@ pub struct SaveData {
     pub music_track: String,
     #[serde(default)]
     pub music_last_stem: String,
+    #[serde(default = "default_hearts")]
+    pub hearts: u32,
 }
 
 impl Default for SaveData {
@@ -57,6 +63,7 @@ impl Default for SaveData {
             music_mode: MusicMode::Fixed,
             music_track: String::new(),
             music_last_stem: String::new(),
+            hearts: STARTING_HEARTS,
         }
     }
 }
@@ -79,6 +86,7 @@ impl From<&GameState> for SaveData {
             music_mode: state.music_mode,
             music_track: state.music_track.clone(),
             music_last_stem: state.music_last_stem.clone(),
+            hearts: state.hearts,
         }
     }
 }
@@ -128,6 +136,7 @@ impl From<SaveData> for GameState {
             music_track,
             music_last_stem,
             music_playing_stem: String::new(),
+            hearts: data.hearts.min(MAX_HEARTS),
         }
     }
 }
@@ -162,6 +171,7 @@ pub fn load_progress_from(path: &Path) -> Option<GameState> {
         && data.version != 2
         && data.version != 3
         && data.version != 4
+        && data.version != 5
     {
         return None;
     }
@@ -187,12 +197,14 @@ mod tests {
 
     #[test]
     fn save_roundtrip() {
-        let base = test_work_dir();
+        let base = test_work_dir().join("save_roundtrip");
         let _ = fs::remove_dir_all(&base);
+        fs::create_dir_all(&base).unwrap();
         let path = progress_path_in(&base);
         let state = GameState {
             player_name: "Ayush".into(),
             xp: 40,
+            hearts: 2,
             music_mode: MusicMode::Fixed,
             music_track: "mossy_gate".into(),
             ..Default::default()
@@ -201,6 +213,7 @@ mod tests {
         let loaded = load_progress_from(&path).unwrap();
         assert_eq!(loaded.player_name, "Ayush");
         assert_eq!(loaded.xp, 40);
+        assert_eq!(loaded.hearts, 2);
         assert_eq!(loaded.music_mode, MusicMode::Fixed);
         assert_eq!(loaded.music_track, "mossy_gate");
         let _ = fs::remove_dir_all(&base);
@@ -218,5 +231,33 @@ mod tests {
         let state = GameState::from(data);
         assert_eq!(state.music_mode, MusicMode::CycleOnQuest);
         assert_eq!(state.music_last_stem, "pixel_dungeon_drift");
+        assert_eq!(state.hearts, STARTING_HEARTS);
+    }
+
+    #[test]
+    fn v5_save_migrates_hearts_to_starting() {
+        let base = test_work_dir().join("v5_hearts_migrate");
+        let _ = fs::remove_dir_all(&base);
+        fs::create_dir_all(&base).unwrap();
+        let path = progress_path_in(&base);
+        let json = r#"{
+  "version": 5,
+  "player_name": "Ayush",
+  "xp": 0,
+  "completed_steps": [],
+  "completed_quests": [],
+  "achievements": [],
+  "practice_unlock_all": false,
+  "streak_days": 0,
+  "last_played_date": "",
+  "music_muted": false,
+  "music_mode": "fixed",
+  "music_track": "",
+  "music_last_stem": ""
+}"#;
+        fs::write(&path, json).unwrap();
+        let loaded = load_progress_from(&path).unwrap();
+        assert_eq!(loaded.hearts, STARTING_HEARTS);
+        let _ = fs::remove_dir_all(&base);
     }
 }

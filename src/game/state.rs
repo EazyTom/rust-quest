@@ -9,6 +9,10 @@ use crate::topics::registry::{self, Quest};
 use super::audio::MusicMode;
 use super::xp::{self, Rank, XP_CHALLENGE, XP_LEARN};
 
+/// Hearts shown beside the player name — wrong answers drain them; correct answers restore.
+pub const STARTING_HEARTS: u32 = 3;
+pub const MAX_HEARTS: u32 = 5;
+
 /// Quest step identifiers stored in `completed_steps`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QuestStep {
@@ -38,7 +42,7 @@ pub enum StepResult {
     QuestCompleted { quest_id: String },
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct GameState {
     pub player_name: String,
     pub xp: u32,
@@ -62,11 +66,68 @@ pub struct GameState {
     pub music_last_stem: String,
     /// Current session playback stem (not saved).
     pub music_playing_stem: String,
+    /// Adventurer vitality — quiz misses drain hearts; correct strikes and lore potions restore.
+    pub hearts: u32,
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        Self {
+            player_name: String::new(),
+            xp: 0,
+            completed_steps: HashSet::new(),
+            completed_quests: HashSet::new(),
+            achievements: HashSet::new(),
+            practice_unlock_all: false,
+            streak_days: 0,
+            last_played_date: String::new(),
+            ownership_passed_first_try: false,
+            errors_challenge_picked_unwrap: false,
+            dungeon_bosses: HashSet::new(),
+            victory_celebrated: false,
+            music_muted: false,
+            music_mode: MusicMode::default(),
+            music_track: String::new(),
+            music_last_stem: String::new(),
+            music_playing_stem: String::new(),
+            hearts: STARTING_HEARTS,
+        }
+    }
 }
 
 impl GameState {
     pub fn rank(&self) -> Rank {
         xp::rank_for_completed(&self.completed_quests)
+    }
+
+    /// Filled heart emojis for the hub status box (`❤️` × current hearts).
+    pub fn hearts_bar(&self) -> String {
+        "❤️".repeat(self.hearts as usize)
+    }
+
+    pub fn is_weakened(&self) -> bool {
+        self.hearts == 0
+    }
+
+    /// +1 heart when a quiz answer is correct (capped at [`MAX_HEARTS`]). Returns true if gained.
+    pub fn gain_heart(&mut self) -> bool {
+        if self.hearts >= MAX_HEARTS {
+            return false;
+        }
+        self.hearts += 1;
+        true
+    }
+
+    /// −1 heart on a wrong quiz answer (floor at 0).
+    pub fn lose_heart(&mut self) {
+        if self.hearts > 0 {
+            self.hearts -= 1;
+        }
+    }
+
+    /// Lore potion from the Learn step — restores one heart when wounded.
+    pub fn drink_lore_potion(&mut self) -> bool {
+        self.gain_heart()
     }
 
     pub fn step_done(&self, quest_id: &str, step: QuestStep) -> bool {
@@ -300,5 +361,27 @@ mod tests {
         let mut state = GameState::default();
         state.complete_step("cargo", QuestStep::Learn, "2026-06-27");
         assert!(!state.is_fresh_adventurer());
+    }
+
+    #[test]
+    fn hearts_start_at_three() {
+        assert_eq!(GameState::default().hearts, STARTING_HEARTS);
+        assert_eq!(GameState::default().hearts_bar(), "❤️❤️❤️");
+    }
+
+    #[test]
+    fn quiz_hearts_gain_and_loss() {
+        let mut state = GameState::default();
+        assert!(state.gain_heart());
+        assert_eq!(state.hearts, 4);
+        state.lose_heart();
+        assert_eq!(state.hearts, 3);
+        for _ in 0..3 {
+            state.lose_heart();
+        }
+        assert_eq!(state.hearts, 0);
+        assert!(state.is_weakened());
+        assert!(state.gain_heart());
+        assert_eq!(state.hearts, 1);
     }
 }
