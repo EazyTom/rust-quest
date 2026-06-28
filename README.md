@@ -6,8 +6,6 @@ A retro terminal adventure that teaches Rust through **14 quests**, runnable dem
 
 🕯️ *The Dungeon Master speaks:* Shadows of bad code creep across the **Kingdom of Rust**. Only a brave hero who masters ownership, traits, and the borrow checker can restore the realm. Sync this repo, run `cargo run`, and step through the mossy gate — your legend begins at the hub campfire.
 
-> **Version:** `[package].version` in [`Cargo.toml`](Cargo.toml) is the source of truth (currently **1.0.0**). The hub reads it via [`src/version.rs`](src/version.rs). Releases are bumped by the [**Bump version**](./.github/workflows/bump-version.yml) GitHub Action — no binaries are published; clone and `cargo run`.
-
 **Your kit:** 🧙 wizard · ⚔️🛡️ combat · 🕯️ torchlight · 📜 scrolls · 🧭🗺️ quest map · 💣 logic bombs · 🔥 streak flame · 🎲 Dungeon Master · ❤️ hearts
 
 ---
