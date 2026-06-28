@@ -50,16 +50,27 @@ Full agent-oriented details: **[AGENTS.md](AGENTS.md)**.
 
 ```mermaid
 flowchart TD
-    Hub[Rust Quest Hub 🧙] --> DM[🎲 Dungeon Master intro]
-    DM --> Map[🧭 Quest Map 🗺️]
-    Map --> Room[🕯️ Room arrival + foe]
-    Room --> Learn[💡 Learn: demo + memory note]
-    Learn --> Challenge[⚔️ Challenge: 3 questions + boss]
-    Challenge -->|pass 75%+| Reward[🔥 XP + rank + 🍺🍺 cheer]
-    Challenge -->|fail| Hint[💡 Hints + 📜 retry docs]
+    Hub["Rust Quest Hub"]
+    DM["Dungeon Master intro"]
+    Map["Quest Map"]
+    Room["Room arrival and foe"]
+    Learn["Learn: demo and memory note"]
+    Challenge["Challenge: 3 questions and boss"]
+    Reward["XP, rank, and victory cheer"]
+    Hint["Hints and retry docs"]
+    Resources["Resources: book and video scrolls"]
+    Practice["Unlock All practice mode"]
+
+    Hub --> DM
+    DM --> Map
+    Map --> Room
+    Room --> Learn
+    Learn --> Challenge
+    Challenge -->|"pass 75% or higher"| Reward
+    Challenge -->|fail| Hint
     Reward --> Hub
-    Hub --> Resources[📜 Resources — book & video scrolls]
-    Hub --> Practice[🔓 Unlock All practice mode]
+    Hub --> Resources
+    Hub --> Practice
 ```
 
 Each quest follows four steps:
@@ -212,10 +223,10 @@ Examples exist for every quest: `cargo run --example cargo`, `--example types`, 
 
 ```mermaid
 flowchart LR
-    Play[cargo run] --> Game[game/]
-    Read[src/topics/] --> Learn[Rust concepts]
-    Game --> Topics[topics/]
-    Game --> Narrative[narrative.rs]
+    Play["cargo run"] --> Game["game/"]
+    Read["src/topics/"] --> Learn["Rust concepts"]
+    Game --> Topics["topics/"]
+    Game --> Narrative["narrative.rs"]
 ```
 
 ---
