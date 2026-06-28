@@ -11,6 +11,8 @@ use crossterm::{
     execute, terminal as crossterm_terminal,
 };
 
+use crate::game::epic;
+use crate::game::narrative;
 use crate::game::state::GameState;
 use crate::topics::registry;
 
@@ -112,13 +114,24 @@ fn render_map(state: &GameState, selected: usize) -> io::Result<()> {
     let nodes = map_nodes();
     for (i, node) in nodes.iter().enumerate() {
         let status = node_status(state, node.quest_id);
+        let dungeon_door = if status == NodeStatus::Locked
+            || epic::dungeon_ready_at(state, node.quest_id)
+        {
+            "🚪"
+        } else {
+            ""
+        };
         let prefix = match status {
             NodeStatus::Completed => "✅",
             NodeStatus::Available if i == selected => "▶ ",
             NodeStatus::Available => "○ ",
             NodeStatus::Locked => "🔒",
         };
-        let line = format!("{} {}  {}", prefix, node.emoji, node.label);
+        let line = if dungeon_door.is_empty() {
+            format!("{} {}  {}", prefix, node.emoji, node.label)
+        } else {
+            format!("{} {} {}  {}", prefix, dungeon_door, node.emoji, node.label)
+        };
         let row = match status {
             NodeStatus::Completed => retro::box_line_styled(&line, |s| s.green()),
             NodeStatus::Available if i == selected => {
@@ -134,10 +147,18 @@ fn render_map(state: &GameState, selected: usize) -> io::Result<()> {
     }
 
     writeln!(stdout, "{}", retro::box_bottom())?;
+    if let Some(node) = nodes.get(selected) {
+        if node_status(state, node.quest_id) != NodeStatus::Locked {
+            if let Some(blurb) = narrative::map_selection_blurb(node.quest_id) {
+                writeln!(stdout)?;
+                writeln!(stdout, "{}", retro::dm_says(&blurb))?;
+            }
+        }
+    }
     writeln!(
         stdout,
         "{}",
-        "  ↑/↓ move   Enter select   Esc back to hub".bright_white()
+        "  ↑/↓ move   Enter enter room   Esc camp".bright_white()
     )?;
     stdout.flush()?;
     Ok(())

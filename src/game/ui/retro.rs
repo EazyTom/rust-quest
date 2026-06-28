@@ -96,6 +96,59 @@ pub fn failure(msg: &str) -> String {
     }
 }
 
+/// DM narration row inside a quest room box.
+pub fn dm_box_line(text: &str) -> String {
+    box_line_styled(text, |s| s.bright_white().italic())
+}
+
+/// Foe presence row inside a quest room box.
+pub fn enemy_box_line(emoji: &str, name: &str, action: &str) -> String {
+    let plain = format!("{emoji} {name} {action}");
+    box_line_styled(&plain, |s| s.red().bold())
+}
+
+pub fn dm_says(text: &str) -> String {
+    format!(
+        "{} {}",
+        "🎲 DM:".bright_white().bold(),
+        text.bright_white().italic()
+    )
+}
+
+pub fn enemy_says(emoji: &str, name: &str, text: &str) -> String {
+    format!(
+        "{} {} {}: \"{}\"",
+        emoji,
+        name.red().bold(),
+        "snarls".dimmed(),
+        text.bright_red()
+    )
+}
+
+pub fn combat_round(round: usize, total: usize) -> String {
+    format!(
+        "⚔️  Strike {}/{} — land a hit with true lore!",
+        round, total
+    )
+    .bright_yellow()
+    .bold()
+    .to_string()
+}
+
+pub fn final_gambit(emoji: &str, name: &str) -> String {
+    format!(
+        "💀 Final gambit — {} {} unleashes all!",
+        emoji, name
+    )
+    .bright_red()
+    .bold()
+    .to_string()
+}
+
+pub fn victory_flash(text: &str) -> String {
+    format!("✨ {}", text.bright_green().bold())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

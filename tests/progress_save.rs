@@ -5,7 +5,7 @@
 use std::fs;
 
 use rust_quest::game::progress::{
-    SAVE_VERSION, load_progress_from, progress_path_in, save_progress_to, test_work_dir,
+    load_progress_from, progress_path_in, save_progress_to, test_work_dir,
 };
 use rust_quest::game::state::GameState;
 
@@ -40,7 +40,13 @@ fn corrupt_file_returns_none() {
 fn fixture_version_matches() {
     let text = include_str!("fixtures/progress_v1.json");
     let v: serde_json::Value = serde_json::from_str(text).unwrap();
-    assert_eq!(v["version"].as_u64().unwrap() as u32, SAVE_VERSION);
-    let loaded: rust_quest::game::progress::SaveData = serde_json::from_str(text).unwrap();
+    assert_eq!(v["version"].as_u64().unwrap(), 1);
+    let base = test_work_dir().join("v1_fixture_load");
+    let _ = fs::remove_dir_all(&base);
+    fs::create_dir_all(&base).unwrap();
+    let path = progress_path_in(&base);
+    fs::write(&path, text).unwrap();
+    let loaded = load_progress_from(&path).unwrap();
     assert_eq!(loaded.player_name, "Ayush");
+    let _ = fs::remove_dir_all(&base);
 }

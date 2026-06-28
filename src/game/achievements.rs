@@ -37,6 +37,31 @@ pub const ALL: &[Achievement] = &[
         emoji: "👑",
         name: "Full Stack Rustacean",
     },
+    Achievement {
+        id: "cellar_boss",
+        emoji: "👹",
+        name: "Warden Slayer",
+    },
+    Achievement {
+        id: "archives_boss",
+        emoji: "🗿",
+        name: "Golem Breaker",
+    },
+    Achievement {
+        id: "forge_boss",
+        emoji: "👻",
+        name: "Phantom Banished",
+    },
+    Achievement {
+        id: "summit_boss",
+        emoji: "🐉",
+        name: "Dragon Slayer",
+    },
+    Achievement {
+        id: "champion_victory",
+        emoji: "🏆",
+        name: "Legendary Champion",
+    },
 ];
 
 pub fn display_name(id: &str) -> Option<(&'static str, &'static str)> {

@@ -6,6 +6,7 @@ use std::collections::HashSet;
 
 use crate::topics::registry;
 
+use super::audio::MusicMode;
 use super::xp::{self, Rank, XP_CHALLENGE, XP_LEARN};
 
 /// Quest step identifiers stored in `completed_steps`.
@@ -49,6 +50,18 @@ pub struct GameState {
     pub last_played_date: String,
     pub ownership_passed_first_try: bool,
     pub errors_challenge_picked_unwrap: bool,
+    /// Phase dungeon boss ids defeated (cellar, archives, forge, summit).
+    pub dungeon_bosses: HashSet<String>,
+    /// Champion victory screen already shown.
+    pub victory_celebrated: bool,
+    pub music_muted: bool,
+    pub music_mode: MusicMode,
+    /// Saved track stem for [`MusicMode::Fixed`].
+    pub music_track: String,
+    /// Last stem in [`MusicMode::CycleOnQuest`] — advances on each quest entry.
+    pub music_last_stem: String,
+    /// Current session playback stem (not saved).
+    pub music_playing_stem: String,
 }
 
 impl GameState {
@@ -159,12 +172,43 @@ impl GameState {
         }
     }
 
+    pub fn defeat_dungeon_boss(&mut self, phase_id: &str) {
+        self.dungeon_bosses.insert(phase_id.to_string());
+        let achievement = match phase_id {
+            "cellar" => Some("cellar_boss"),
+            "archives" => Some("archives_boss"),
+            "forge" => Some("forge_boss"),
+            "summit" => Some("summit_boss"),
+            _ => None,
+        };
+        if let Some(id) = achievement {
+            self.achievements.insert(id.into());
+        }
+    }
+
+    pub fn mark_victory_celebrated(&mut self) {
+        self.victory_celebrated = true;
+        self.achievements.insert("champion_victory".into());
+    }
+
     pub fn reset(&mut self) {
         let name = self.player_name.clone();
+        let music_muted = self.music_muted;
+        let music_mode = self.music_mode;
+        let music_track = self.music_track.clone();
+        let music_last_stem = self.music_last_stem.clone();
         *self = GameState {
             player_name: name,
+            music_muted,
+            music_mode,
+            music_track,
+            music_last_stem,
             ..Default::default()
         };
+    }
+
+    pub fn is_champion(&self) -> bool {
+        self.completed_quests.len() >= 14
     }
 }
 

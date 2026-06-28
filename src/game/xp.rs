@@ -7,7 +7,8 @@ use std::collections::HashSet;
 /// XP granted once per step type.
 pub const XP_LEARN: u32 = 15;
 pub const XP_CHALLENGE: u32 = 25;
-pub const MAX_XP: u32 = 14 * (XP_LEARN + XP_CHALLENGE);
+pub const XP_DUNGEON_BOSS: u32 = 50;
+pub const MAX_XP: u32 = 14 * (XP_LEARN + XP_CHALLENGE) + 4 * XP_DUNGEON_BOSS;
 
 /// Display rank derived from completed quests.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

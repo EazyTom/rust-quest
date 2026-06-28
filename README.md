@@ -19,6 +19,8 @@ cargo doc --open   # browse annotated API docs
 
 On first launch you enter the **hub**, pick quests from the crossterm **quest map**, and progress is saved to `.rust-test/progress.json`.
 
+**Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md). AI/agent contributors: see [AGENTS.md](AGENTS.md).
+
 ---
 
 ## How it works
@@ -42,7 +44,9 @@ Each quest follows four steps:
 3. **Reward** — XP (once per step), rank checks, badges
 4. **Explore** — optional links in your browser
 
-**Hub menu:** Quest Map · Profile · Resources · Sandbox · Unlock All · Reset · Quit
+**Hub menu:** Quest Map · Profile · Resources · Sandbox · Book study guide · Unlock All · Reset · **Music** · Quit
+
+Background music plays from `assets/music/` (MP3). Choose a fixed track or **cycle per quest** from the Music menu; mute is saved separately.
 
 **Quest map:** `↑`/`↓` move · `Enter` select · `Esc` back
 
@@ -68,6 +72,23 @@ Each quest follows four steps:
 | 14 | 🚀 Advanced Cargo | features, workspaces |
 
 Quests unlock in order. **Unlock All** lets you practice without waiting.
+
+---
+
+## Epic phases & dungeon bosses
+
+Quests are grouped into **four story arcs** tied to [The Rust Book](https://doc.rust-lang.org/book/). When you finish the last quest in a phase, a **dungeon boss** fight unlocks — a mixed quiz using each quest’s boss question from that phase (≥75% to win, +50 bonus XP).
+
+| Phase | Quests | Boss | Book chapters |
+|-------|--------|------|----------------|
+| **The Cellar** — Foundations | Cargo → Errors (5) | 👹 Borrow Checker Warden | Ch 1–6, 9 |
+| **The Archives** — Abstractions | Collections → Lifetimes (3) | 🗿 Generic Golem | Ch 8, 10 |
+| **The Forge** — Craft | Modules → Smart Pointers (3) | 👻 Closure Phantom | Ch 7, 13, 15–16 |
+| **The Summit** — Mastery | Concurrency → Advanced Cargo (3) | 🐉 Thread Dragon | Ch 11–12, 14 |
+
+Complete all **14 quests** to become **👑 Rust Quest Champion** — a full victory celebration with treasure, potions, and a nudge to revisit every quest and resource link.
+
+**Book study guide** (hub menu): topics we don’t have a dedicated quest for yet — control flow, functions, pattern depth, macros intro — with links into the book.
 
 ---
 
@@ -125,6 +146,9 @@ Examples exist for every quest: `cargo run --example cargo`, `--example types`, 
 .
 ├── Cargo.toml
 ├── README.md
+├── CONTRIBUTING.md
+├── AGENTS.md
+├── assets/music/          ← background MP3 tracks
 ├── src/
 │   ├── main.rs
 │   ├── game/
@@ -192,6 +216,17 @@ More: [The Rust Book](https://doc.rust-lang.org/book/) · [Rust by Example](http
 | cannot borrow as mutable twice | two `&mut` at once | narrow scope, use references sequentially |
 | borrowed value does not live long enough | dangling reference | extend owner lifetime or return owned data |
 | `Send` / `Sync` trait bound | unsafe thread sharing | use `Arc<Mutex<T>>`, understand sharing rules |
+
+---
+
+## Contributing
+
+We welcome bug fixes, quest improvements, narrative polish, tests, and docs.
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — setup, PR checklist, code style, how to add quests and music
+- **[AGENTS.md](AGENTS.md)** — architecture and constraints for AI coding agents
+
+Run `.\scripts\run_tests.ps1` (Windows) or `./scripts/run_tests.sh` before opening a PR.
 
 ---
 
