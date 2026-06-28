@@ -48,29 +48,41 @@ jobs:
 
       - name: Apply bump
         if: ${{ !inputs.dry_run }}
-        run: python scripts/bump_release.py --bump "${{ inputs.bump }}" --write
+        id: release
+        run: python scripts/bump_release.py --bump "${{ inputs.bump }}" --write --print-version
 
-      - name: Resolve new version
-        if: ${{ !inputs.dry_run }}
-        id: ver
-        run: |
-          VERSION=$(grep -E '^version = ' Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/')
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "New version: $VERSION"
-
-      - name: Commit, tag, and push
-        if: ${{ !inputs.dry_run }}
+      - name: Commit version files
+        if: ${{ !inputs.dry_run && steps.release.outputs.skip_writes != 'true' }}
         env:
-          NEW_VERSION: ${{ steps.ver.outputs.version }}
+          NEW_VERSION: ${{ steps.release.outputs.version }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Cargo.toml Cargo.lock README.md
           if git diff --staged --quiet; then
-            echo "Nothing to commit — no relevant changes since last tag?"
+            echo "No staged changes after bump script"
             exit 1
           fi
           git commit -m "chore(release): v${NEW_VERSION}"
-          git tag -a "v${NEW_VERSION}" -m "rust-quest v${NEW_VERSION}"
           git push
-          git push origin "v${NEW_VERSION}"
+
+      - name: Tag release
+        if: ${{ !inputs.dry_run }}
+        env:
+          NEW_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "v${NEW_VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${NEW_VERSION} already exists — skipping tag push"
+          else
+            git tag -a "v${NEW_VERSION}" -m "rust-quest v${NEW_VERSION}"
+            git push origin "v${NEW_VERSION}"
+          fi
+
+      - name: Already synced summary
+        if: ${{ !inputs.dry_run && steps.release.outputs.skip_writes == 'true' }}
+        env:
+          NEW_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          echo "Version v${NEW_VERSION} already present in Cargo.toml and README.md — no file edits."

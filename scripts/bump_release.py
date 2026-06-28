@@ -7,6 +7,7 @@ Used by .github/workflows/bump-version.yml — no cargo build or release artifac
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -20,6 +21,10 @@ CARGO_LOCK = ROOT / "Cargo.lock"
 README = ROOT / "README.md"
 
 VERSION_RE = re.compile(r'^version\s*=\s*"(\d+\.\d+\.\d+)"\s*$', re.MULTILINE)
+README_VERSION_RE = re.compile(r"^\*\*Version (\d+\.\d+\.\d+)\*\*\s*$", re.MULTILINE)
+README_FEATURES_RE = re.compile(
+    r"^## Game Features \(v(\d+\.\d+\.\d+)\)\s*$", re.MULTILINE
+)
 TAG_RE = re.compile(r"^v(\d+\.\d+\.\d+)$")
 
 # Paths that count as player-facing / gameplay (included in What's New).
@@ -72,6 +77,15 @@ def run(*args: str, check: bool = True) -> str:
     return (result.stdout or "").strip()
 
 
+def parse_semver(version: str) -> tuple[int, int, int]:
+    major, minor, patch = version.split(".")
+    return int(major), int(minor), int(patch)
+
+
+def semver_gt(a: str, b: str) -> bool:
+    return parse_semver(a) > parse_semver(b)
+
+
 def read_version() -> str:
     text = CARGO_TOML.read_text(encoding="utf-8")
     match = VERSION_RE.search(text)
@@ -80,8 +94,61 @@ def read_version() -> str:
     return match.group(1)
 
 
+def read_readme_version() -> str | None:
+    text = README.read_text(encoding="utf-8")
+    match = README_VERSION_RE.search(text)
+    return match.group(1) if match else None
+
+
+def read_readme_features_version() -> str | None:
+    text = README.read_text(encoding="utf-8")
+    match = README_FEATURES_RE.search(text)
+    return match.group(1) if match else None
+
+
+def readme_has_whats_new(version: str) -> bool:
+    text = README.read_text(encoding="utf-8")
+    return bool(re.search(rf"^### v{re.escape(version)} —", text, re.MULTILINE))
+
+
+def cargo_lock_version() -> str | None:
+    if not CARGO_LOCK.is_file():
+        return None
+    text = CARGO_LOCK.read_text(encoding="utf-8")
+    match = re.search(
+        r'name = "rust-quest"\nversion = "(\d+\.\d+\.\d+)"', text
+    )
+    return match.group(1) if match else None
+
+
+def version_files_synced(version: str) -> bool:
+    """True when Cargo.toml, README headers, and What's New already match `version`."""
+    if read_version() != version:
+        return False
+    if read_readme_version() != version:
+        return False
+    if read_readme_features_version() != version:
+        return False
+    if not readme_has_whats_new(version):
+        return False
+    lock_ver = cargo_lock_version()
+    if lock_ver is not None and lock_ver != version:
+        return False
+    return True
+
+
+def tag_exists(version: str) -> bool:
+    result = subprocess.run(
+        ["git", "rev-parse", f"v{version}^{{tag}}"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
 def bump_version(current: str, kind: str) -> str:
-    major, minor, patch = (int(x) for x in current.split("."))
+    major, minor, patch = parse_semver(current)
     if kind == "major":
         return f"{major + 1}.0.0"
     if kind == "minor":
@@ -89,6 +156,40 @@ def bump_version(current: str, kind: str) -> str:
     if kind == "patch":
         return f"{major}.{minor}.{patch + 1}"
     sys.exit(f"Unknown bump kind: {kind}")
+
+
+def resolve_release_version(bump_kind: str) -> tuple[str, bool]:
+    """Return (release_version, skip_file_updates).
+
+    If Cargo.toml and README already reflect the bumped version (ahead of the
+    latest tag), do not increment again.
+    """
+    since_tag = latest_release_tag()
+    tag_ver = since_tag[1:] if since_tag else "0.0.0"
+    computed = bump_version(tag_ver, bump_kind)
+    cargo_ver = read_version()
+    readme_ver = read_readme_version()
+
+    if version_files_synced(computed):
+        print(f"Version files already at v{computed} — skipping file updates")
+        return computed, True
+
+    if (
+        cargo_ver == readme_ver
+        and semver_gt(cargo_ver, tag_ver)
+        and version_files_synced(cargo_ver)
+    ):
+        print(
+            f"Version files already at v{cargo_ver} (ahead of tag {since_tag or '(none)'}) "
+            "— skipping file updates"
+        )
+        return cargo_ver, True
+
+    if cargo_ver == computed and readme_ver == computed and readme_has_whats_new(computed):
+        print(f"Version v{computed} present in README/Cargo — skipping file updates")
+        return computed, True
+
+    return computed, False
 
 
 def write_cargo_toml(new_version: str) -> None:
@@ -106,6 +207,8 @@ def write_cargo_lock(old_version: str, new_version: str) -> None:
     block = f'name = "rust-quest"\nversion = "{old_version}"'
     replacement = f'name = "rust-quest"\nversion = "{new_version}"'
     if block not in text:
+        if cargo_lock_version() == new_version:
+            return
         sys.exit("Could not find rust-quest version block in Cargo.lock")
     CARGO_LOCK.write_text(text.replace(block, replacement, 1), encoding="utf-8")
 
@@ -284,30 +387,40 @@ def update_readme(new_version: str, whats_new_entry: str) -> None:
     )
 
     anchor = "<!-- bump-release:whats-new -->"
-    if anchor not in text:
-        insert = (
-            "\n---\n\n"
-            "## What's New\n\n"
-            f"{anchor}\n\n"
-            f"### v{new_version} — initial catalog entry\n\n"
-            "See [Game Features](#game-features-v"
-            + new_version.replace(".", "")
-            + ") for the full v"
-            + new_version
-            + " feature list.\n"
-        )
-        marker = "\n---\n\n## Game Features"
-        if marker not in text:
-            sys.exit("README missing Game Features section")
-        text = text.replace(marker, insert + marker, 1)
-    else:
-        text = text.replace(
-            anchor,
-            f"{anchor}\n\n{whats_new_entry}",
-            1,
-        )
+    if not readme_has_whats_new(new_version):
+        if anchor not in text:
+            insert = (
+                "\n---\n\n"
+                "## What's New\n\n"
+                f"{anchor}\n\n"
+                f"### v{new_version} — initial catalog entry\n\n"
+                "See [Game Features](#game-features-v"
+                + new_version.replace(".", "")
+                + ") for the full v"
+                + new_version
+                + " feature list.\n"
+            )
+            marker = "\n---\n\n## Game Features"
+            if marker not in text:
+                sys.exit("README missing Game Features section")
+            text = text.replace(marker, insert + marker, 1)
+        else:
+            text = text.replace(
+                anchor,
+                f"{anchor}\n\n{whats_new_entry}",
+                1,
+            )
 
     README.write_text(text, encoding="utf-8")
+
+
+def write_github_output(version: str, skip_writes: bool) -> None:
+    path = os.environ.get("GITHUB_OUTPUT")
+    if not path:
+        return
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(f"version={version}\n")
+        handle.write(f"skip_writes={'true' if skip_writes else 'false'}\n")
 
 
 def main() -> None:
@@ -326,18 +439,23 @@ def main() -> None:
     parser.add_argument(
         "--print-version",
         action="store_true",
-        help="Print the new version and exit (after --write)",
+        help="Print the release version on the last line",
     )
     args = parser.parse_args()
 
-    old_version = read_version()
-    new_version = bump_version(old_version, args.bump)
     since_tag = latest_release_tag()
+    new_version, skip_writes = resolve_release_version(args.bump)
+    old_version = read_version()
     release_date = date.today().isoformat()
     whats_new = build_whats_new_body(since_tag, new_version, release_date)
 
     print(f"Previous tag: {since_tag or '(none)'}")
-    print(f"Version: {old_version} -> {new_version}")
+    print(f"Cargo.toml: {old_version}")
+    print(f"Release version: v{new_version}")
+    if skip_writes:
+        print("File updates: skipped (already synced)")
+    else:
+        print(f"File updates: {old_version} -> {new_version}")
     print()
     print("What's New preview:")
     print(whats_new)
@@ -346,9 +464,14 @@ def main() -> None:
         print("(dry run — pass --write to apply)")
         return
 
-    write_cargo_toml(new_version)
-    write_cargo_lock(old_version, new_version)
-    update_readme(new_version, whats_new)
+    if not skip_writes:
+        write_cargo_toml(new_version)
+        write_cargo_lock(old_version, new_version)
+        update_readme(new_version, whats_new)
+    else:
+        print("Leaving Cargo.toml, Cargo.lock, and README.md unchanged")
+
+    write_github_output(new_version, skip_writes)
 
     if args.print_version:
         print(new_version)

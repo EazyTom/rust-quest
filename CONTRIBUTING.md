@@ -143,6 +143,7 @@ To cut a release:
 4. The workflow runs [`scripts/bump_release.py`](scripts/bump_release.py), which:
    - Increments `[package].version` in `Cargo.toml` and syncs `Cargo.lock`
    - Prepends a **What's New** entry in `README.md` from commits since the previous `v*.*.*` tag (gameplay paths only; skips cosmetic-only UI edits)
+   - **Skips file edits** if `Cargo.toml`, `Cargo.lock`, and `README.md` already match the target release (including a `### vX.Y.Z` What's New entry) — useful when version files were updated in an earlier commit; the workflow still creates the git tag if missing
    - Commits, tags `vX.Y.Z`, and pushes
 
 Tag the current `1.0.0` baseline once manually if this is the first release: `git tag -a v1.0.0 -m "rust-quest v1.0.0"`.
