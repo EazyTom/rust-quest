@@ -28,6 +28,21 @@ On first launch you enter the **hub** with a **🎲 Dungeon Master** intro invit
 
 > **Dedicated to Ayush** — built to help you learn Rust by playing a game and reading the source. You've got this. 🏆
 
+---
+
+## Screenshots
+
+**Hub — main menu**
+
+![Rust Quest hub main menu with player stats, hearts, and quest options](media/rust-quest-menu.png)
+
+**Quest map — pick your next room**
+
+![Rust Quest crossterm quest map](media/rust-quest-map.png)
+
+**Challenge — quiz battle**
+
+![Rust Quest challenge quiz battle screen](media/rust-quest-battle.png)
 
 ---
 
