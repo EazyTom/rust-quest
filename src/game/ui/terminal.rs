@@ -26,7 +26,7 @@ fn enable_windows_vt() {
     use std::io::{self, Write};
 
     #[link(name = "kernel32")]
-    unsafe extern "system" {
+    extern "system" {
         fn SetConsoleOutputCP(w_code_page_id: u32) -> i32;
         fn GetStdHandle(n_std_handle: u32) -> *mut std::ffi::c_void;
         fn SetConsoleMode(h_console: *mut std::ffi::c_void, mode: u32) -> i32;

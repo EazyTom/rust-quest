@@ -12,7 +12,11 @@ A retro terminal adventure that teaches Rust through **14 quests**, runnable dem
 
 ## Quick Start — Answer the call
 
-**Prerequisites:** [rustup](https://rustup.rs/) (includes `cargo`). Use **Windows Terminal**, **WezTerm**, or **iTerm2** for emoji and colors.
+**Prerequisites:** **Rust 1.75+** (install via [rustup](https://rustup.rs/) or your distro’s `rustc`/`cargo` packages). Use **Windows Terminal**, **WezTerm**, or **iTerm2** for emoji and colors.
+
+```bash
+rustc --version   # must be 1.75.0 or newer
+```
 
 ```bash
 git clone <your-fork-or-repo-url>

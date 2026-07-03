@@ -12,7 +12,7 @@ use crate::game::narrative;
 use crate::game::progress;
 use crate::game::audio::{self, MusicHandle, MusicMode};
 use crate::game::quiz::{PresentedQuestion, QuizQuestion, score_presented};
-use crate::game::state::{GameState, QuestStep, StepResult, today_string};
+use crate::game::state::{GameState, QuestStep, StepResult, today_string, MAX_HEARTS};
 use crate::game::ui::{copy, input, retro, run_quest_map};
 use crate::game::xp::{self, XP_CHALLENGE, XP_DUNGEON_BOSS};
 use crate::resources::links::open_url;
@@ -200,8 +200,7 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<()> {
             1 => resource_menu(state)?,
             2 => sandbox_menu()?,
             3 => {
-                epic::print_book_gaps_guide();
-                grant_healing_from_resources(state);
+                book_study_menu(state)?;
                 if state.is_champion() {
                     println!(
                         "{}",
@@ -458,6 +457,41 @@ fn resource_menu(state: &mut GameState) -> io::Result<()> {
         return Ok(());
     };
     open_links_menu(state, &quests[idx])?;
+    Ok(())
+}
+
+const RUST_BOOK_URL: &str = "https://doc.rust-lang.org/book/";
+
+/// Hub Book study guide — pick a gap chapter; opening a link brews a lore potion like Resources.
+fn book_study_menu(state: &mut GameState) -> io::Result<()> {
+    println!("\n{}", retro::section_header("📖 Book study guide"));
+    println!("{}", copy::book_study_intro().dimmed());
+    if state.hearts < MAX_HEARTS {
+        println!("{}", retro::dungeon_master_says(copy::book_study_potion_hint()));
+    }
+    println!();
+
+    loop {
+        let labels: Vec<String> = epic::BOOK_GAPS
+            .iter()
+            .map(|(topic, detail, _)| format!("{topic} — {detail}"))
+            .collect();
+        let mut items = labels;
+        items.push("📖 Full Rust Book — table of contents".into());
+        let item_refs: Vec<&str> = items.iter().map(String::as_str).collect();
+        let sel = select_menu("Open a chapter (↑/↓, Enter, Esc back)", &item_refs)?;
+        let Some(sel) = sel else {
+            break;
+        };
+        if sel < epic::BOOK_GAPS.len() {
+            let (_topic, _detail, url) = epic::BOOK_GAPS[sel];
+            open_url(url);
+            grant_healing_from_resources(state);
+        } else if sel == epic::BOOK_GAPS.len() {
+            open_url(RUST_BOOK_URL);
+            grant_healing_from_resources(state);
+        }
+    }
     Ok(())
 }
 

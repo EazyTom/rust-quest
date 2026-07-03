@@ -27,7 +27,7 @@ Design goals:
 
 ### Prerequisites
 
-- [rustup](https://rustup.rs/) (stable toolchain)
+- **Rust 1.75+** ([rustup](https://rustup.rs/) stable, or distro packages — Debian 13 ships 1.85; Debian 12 ships 1.63 and is below MSRV)
 - A UTF-8 terminal: **Windows Terminal**, **WezTerm**, or **iTerm2** recommended
 
 ### Clone and run

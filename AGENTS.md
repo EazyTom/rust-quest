@@ -17,6 +17,8 @@ Guide for Cursor, Claude, and other coding agents working in this repository.
 
 ## Quick commands
 
+**Requires Rust 1.75+** (see `rust-version` in `Cargo.toml`).
+
 ```bash
 cd rust-quest
 cargo run                    # play

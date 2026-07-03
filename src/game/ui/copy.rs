@@ -102,13 +102,13 @@ pub fn heart_lost(current: u32) -> String {
 }
 
 pub fn hearts_depleted() -> &'static str {
-    "🧪 Thou art weakening! Study runes (Learn), open book chapters (Resources), or read \
-     quest scrolls for a healing potion — then return to face the foe."
+    "🧪 Thou art weakening! Study runes (Learn), open scrolls (Resources), read gap chapters \
+     (Book study guide), or quest book links for a healing potion — then return to face the foe."
 }
 
 pub fn too_weakened_to_fight() -> &'static str {
     "🧪 The Dungeon Master stays thy hand — thou art too weak to fight. \
-     Study runes (Learn) or consult Resources / book chapters for a potion, then strike again."
+     Study runes (Learn), consult Resources / Book study guide / book chapters for a potion, then strike again."
 }
 
 pub fn lore_potion() -> &'static str {
@@ -117,6 +117,14 @@ pub fn lore_potion() -> &'static str {
 
 pub fn resource_potion() -> &'static str {
     "📖 Thy reading distills a healing draught from the scrolls — one heart restored!"
+}
+
+pub fn book_study_intro() -> &'static str {
+    "Topics worth a dedicated read after the core quests — pick one to open in your browser."
+}
+
+pub fn book_study_potion_hint() -> &'static str {
+    "🧪 Each chapter you open brews a healing draught from the scrolls — one heart restored while below max."
 }
 
 pub fn memory_safety_header() -> &'static str {

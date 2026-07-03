@@ -171,15 +171,30 @@ fn quest_map_loop(state: &GameState) -> io::Result<Option<&'static str>> {
     let nodes = map_nodes();
     let mut selected = initial_map_selection(state);
 
+    render_map(state, selected)?;
+
     loop {
-        render_map(state, selected)?;
+        // GAME: poll without redrawing — full-screen clear+repaint every 100ms caused flashing
+        // on some Linux terminals (ghost borders, unreadable map). Redraw only on input/resize.
         if !event::poll(std::time::Duration::from_millis(100))? {
             continue;
         }
         match event::read()? {
             Event::Key(KeyEvent { code, .. }) => match code {
-                KeyCode::Up => selected = next_selectable(state, selected, -1),
-                KeyCode::Down => selected = next_selectable(state, selected, 1),
+                KeyCode::Up => {
+                    let next = next_selectable(state, selected, -1);
+                    if next != selected {
+                        selected = next;
+                        render_map(state, selected)?;
+                    }
+                }
+                KeyCode::Down => {
+                    let next = next_selectable(state, selected, 1);
+                    if next != selected {
+                        selected = next;
+                        render_map(state, selected)?;
+                    }
+                }
                 KeyCode::Enter => {
                     let id = nodes[selected].quest_id;
                     if node_status(state, id) == NodeStatus::Locked {
@@ -190,7 +205,7 @@ fn quest_map_loop(state: &GameState) -> io::Result<Option<&'static str>> {
                 KeyCode::Esc | KeyCode::Char('q') => return Ok(None),
                 _ => {}
             },
-            Event::Resize(_, _) => {}
+            Event::Resize(_, _) => render_map(state, selected)?,
             _ => {}
         }
     }

@@ -380,7 +380,10 @@ mod tests {
         let frame = main_menu_frame();
         let box_row = box_line("aligned");
         let ornament = menu_ornament();
-        assert_eq!(ornament.chars().count(), box_row.lines().next().unwrap().chars().count());
+        assert_eq!(
+            visible_width(&ornament),
+            visible_width(box_row.lines().next().unwrap())
+        );
         assert!(frame.contains("Main Menu"));
         assert!(frame.contains("🕯️"));
     }
@@ -391,8 +394,9 @@ mod tests {
         let top = format!("╔{}╗", "═".repeat(horizontal_rule_len()));
         let bottom = format!("╚{}╝", "═".repeat(horizontal_rule_len()));
         for line in side.lines() {
-            assert_eq!(line.chars().count(), top.chars().count());
-            assert_eq!(line.chars().count(), bottom.chars().count());
+            let w = visible_width(line);
+            assert_eq!(w, visible_width(&top));
+            assert_eq!(w, visible_width(&bottom));
         }
     }
 }
