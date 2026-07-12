@@ -4,7 +4,7 @@
 
 use colored::Colorize;
 
-use crate::game::quiz::{PresentedQuestion, QuizQuestion, score_presented};
+use crate::game::quiz::{score_presented, PresentedQuestion, QuizQuestion};
 use crate::game::state::GameState;
 use crate::game::ui::retro;
 use crate::topics::registry;
@@ -241,11 +241,9 @@ pub fn celebrate_champion(state: &GameState) {
     print_book_gaps_guide();
     println!(
         "{}",
-        format!(
-            "Hero {name}, the realm of Rust is yours. 👑🪙 🍺🍺 Keep building! 🧙⚔️",
-        )
-        .bright_green()
-        .bold()
+        format!("Hero {name}, the realm of Rust is yours. 👑🪙 🍺🍺 Keep building! 🧙⚔️",)
+            .bright_green()
+            .bold()
     );
     println!();
 }

@@ -7,5 +7,5 @@ pub mod resources;
 pub mod topics;
 pub mod version;
 
-pub use game::{GameState, load_progress, run_hub, save_progress};
+pub use game::{load_progress, run_hub, save_progress, GameState};
 pub use version::VERSION;

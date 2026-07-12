@@ -13,9 +13,7 @@ pub fn book_chapter_prompt(quest_title: &str) -> String {
 }
 
 pub fn next_quest_guidance(quest_emoji: &str, quest_title: &str, room_name: &str) -> String {
-    format!(
-        "🧭 The path opens to {quest_emoji} {quest_title} — {room_name}. Onward!"
-    )
+    format!("🧭 The path opens to {quest_emoji} {quest_title} — {room_name}. Onward!")
 }
 
 pub fn all_quests_cleared() -> &'static str {

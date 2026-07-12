@@ -137,13 +137,7 @@ mod tests {
 
     #[test]
     fn bad_unwrap_pick_tracks_unwrap_choice() {
-        let mut q = QuizQuestion::new(
-            "pick?",
-            &["unwrap()", "match", "?", "panic"],
-            1,
-            "h",
-            "e",
-        );
+        let mut q = QuizQuestion::new("pick?", &["unwrap()", "match", "?", "panic"], 1, "h", "e");
         q.is_bad_unwrap_choice = true;
         let p = q.present("errors", 0);
         let unwrap_idx = p

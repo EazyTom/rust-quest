@@ -2,7 +2,7 @@
 //!
 //! LEARN: presented questions shuffle choices; scoring uses the shuffled correct index.
 
-use rust_quest::game::quiz::{QuizQuestion, score_presented};
+use rust_quest::game::quiz::{score_presented, QuizQuestion};
 
 #[test]
 fn pass_at_seventy_five_percent() {

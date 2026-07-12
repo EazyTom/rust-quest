@@ -94,6 +94,7 @@ fn next_selectable(state: &GameState, from: usize, delta: i32) -> usize {
 }
 
 fn render_map(state: &GameState, selected: usize) -> io::Result<()> {
+    retro::refresh_layout();
     let mut stdout = io::stdout();
     execute!(
         stdout,

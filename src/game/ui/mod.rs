@@ -7,4 +7,4 @@ pub mod retro;
 pub mod terminal;
 
 pub use input::{clear_screen, clear_screen_quiet, drain_pending_keys, drain_pending_keys_quiet};
-pub use map::{MapNode, NodeStatus, initial_map_selection, node_status, run_quest_map};
+pub use map::{initial_map_selection, node_status, run_quest_map, MapNode, NodeStatus};

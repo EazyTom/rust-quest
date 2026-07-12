@@ -105,7 +105,12 @@ static Q1: QuizQuestion = QuizQuestion::new(
 
 static Q2: QuizQuestion = QuizQuestion::new(
     "Option<T> has which two variants?",
-    &["Ok and Err", "Some and None", "True and False", "Left and Right"],
+    &[
+        "Ok and Err",
+        "Some and None",
+        "True and False",
+        "Left and Right",
+    ],
     1,
     "Step 4 in Learn: Some(value) when present, None when absent.",
     "Option<T> is an enum: Some(T) or None — Rust's replacement for null.",

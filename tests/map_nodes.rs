@@ -3,7 +3,7 @@
 //! LEARN: integration tests live in `tests/` and link the crate like an external user would.
 
 use rust_quest::game::state::GameState;
-use rust_quest::game::ui::{NodeStatus, node_status};
+use rust_quest::game::ui::{node_status, NodeStatus};
 
 #[test]
 fn locked_second_quest_by_default() {

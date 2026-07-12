@@ -215,10 +215,7 @@ pub fn next_in_cycle(last_stem: &str) -> Option<String> {
     if last_stem.is_empty() {
         return Some(tracks[0].stem.clone());
     }
-    let idx = tracks
-        .iter()
-        .position(|t| t.stem == last_stem)
-        .unwrap_or(0);
+    let idx = tracks.iter().position(|t| t.stem == last_stem).unwrap_or(0);
     Some(tracks[(idx + 1) % tracks.len()].stem.clone())
 }
 
@@ -366,9 +363,6 @@ mod tests {
         let mut state = GameState::default();
         state.music_mode = MusicMode::Fixed;
         state.music_track = "mossy_gate".into();
-        assert_eq!(
-            stem_for_session(&state).as_deref(),
-            Some("mossy_gate")
-        );
+        assert_eq!(stem_for_session(&state).as_deref(), Some("mossy_gate"));
     }
 }

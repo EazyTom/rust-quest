@@ -3,10 +3,11 @@
 //! LEARN: main runs setup → load save → hub loop → save on exit.
 
 use rust_quest::game::ui::terminal;
-use rust_quest::game::{GameState, MusicHandle, load_progress, run_hub, save_progress};
+use rust_quest::game::{load_progress, run_hub, save_progress, GameState, MusicHandle};
 
 fn main() {
     terminal::setup();
+    rust_quest::game::ui::retro::refresh_layout();
     let mut state = load_progress();
     let music = MusicHandle::start();
     MusicHandle::launch_music(&mut state, &music);

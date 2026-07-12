@@ -7,12 +7,12 @@ use std::io;
 use colored::Colorize;
 use dialoguer::{Confirm, Input, Select};
 
+use crate::game::audio::{self, MusicHandle, MusicMode};
 use crate::game::epic;
 use crate::game::narrative;
 use crate::game::progress;
-use crate::game::audio::{self, MusicHandle, MusicMode};
-use crate::game::quiz::{PresentedQuestion, QuizQuestion, score_presented};
-use crate::game::state::{GameState, QuestStep, StepResult, today_string, MAX_HEARTS};
+use crate::game::quiz::{score_presented, PresentedQuestion, QuizQuestion};
+use crate::game::state::{today_string, GameState, QuestStep, StepResult, MAX_HEARTS};
 use crate::game::ui::{copy, input, retro, run_quest_map};
 use crate::game::xp::{self, XP_CHALLENGE, XP_DUNGEON_BOSS};
 use crate::resources::links::open_url;
@@ -168,6 +168,7 @@ pub fn run_hub(state: &mut GameState, music: &MusicHandle) -> io::Result<()> {
 
     loop {
         input::clear_screen_quiet();
+        retro::refresh_layout();
         print_hub(state);
         print_hub_adventure_intro(state);
         if state.is_champion() {
@@ -288,11 +289,7 @@ fn print_hub(state: &GameState) {
     );
     println!(
         "{}",
-        retro::box_line(&format!(
-            "Rank: {} {}",
-            rank.emoji(),
-            rank.title()
-        ))
+        retro::box_line(&format!("Rank: {} {}", rank.emoji(), rank.title()))
     );
     println!(
         "{}",
@@ -343,15 +340,13 @@ fn music_menu(state: &mut GameState, music: &MusicHandle) -> io::Result<()> {
         if !music.is_available() {
             println!(
                 "{}",
-                "No audio device detected — music controls are saved but silent here."
-                    .dimmed()
+                "No audio device detected — music controls are saved but silent here.".dimmed()
             );
         }
         if tracks.is_empty() {
             println!(
                 "{}",
-                "No .mp3 files in assets/music/ — add tracks and restart."
-                    .yellow()
+                "No .mp3 files in assets/music/ — add tracks and restart.".yellow()
             );
             let _ = select_menu("Back", &["Back"])?;
             break;
@@ -373,9 +368,7 @@ fn music_menu(state: &mut GameState, music: &MusicHandle) -> io::Result<()> {
         } else {
             ""
         };
-        choices.push(format!(
-            "Cycle — rotate track on each quest{cycle_mark}"
-        ));
+        choices.push(format!("Cycle — rotate track on each quest{cycle_mark}"));
         choices.push(mute_label.to_string());
         choices.push("Back".to_string());
         let choice_refs: Vec<&str> = choices.iter().map(String::as_str).collect();
@@ -467,7 +460,10 @@ fn book_study_menu(state: &mut GameState) -> io::Result<()> {
     println!("\n{}", retro::section_header("📖 Book study guide"));
     println!("{}", copy::book_study_intro().dimmed());
     if state.hearts < MAX_HEARTS {
-        println!("{}", retro::dungeon_master_says(copy::book_study_potion_hint()));
+        println!(
+            "{}",
+            retro::dungeon_master_says(copy::book_study_potion_hint())
+        );
     }
     println!();
 
@@ -600,7 +596,10 @@ fn run_learn(state: &mut GameState, quest: Quest) {
     let today = today_string();
     match state.complete_step(quest.id, QuestStep::Learn, &today) {
         StepResult::XpGained { amount, .. } => {
-            println!("{}", retro::success(&format!("+{amount} XP — {}", copy::learn_complete())));
+            println!(
+                "{}",
+                retro::success(&format!("+{amount} XP — {}", copy::learn_complete()))
+            );
         }
         StepResult::AlreadyDone => println!("{}", copy::learn_already().dimmed()),
         StepResult::RankUp { .. } | StepResult::QuestCompleted { .. } => {}
@@ -617,7 +616,10 @@ fn run_challenge(state: &mut GameState, quest: Quest) -> io::Result<bool> {
     }
 
     if state.is_weakened() {
-        println!("{}", retro::dungeon_master_says(copy::too_weakened_to_fight()));
+        println!(
+            "{}",
+            retro::dungeon_master_says(copy::too_weakened_to_fight())
+        );
         return Ok(false);
     }
 
@@ -752,7 +754,10 @@ fn try_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> i
 
 fn run_dungeon_boss(state: &mut GameState, phase: &'static epic::EpicPhase) -> io::Result<()> {
     if state.is_weakened() {
-        println!("{}", retro::dungeon_master_says(copy::too_weakened_to_fight()));
+        println!(
+            "{}",
+            retro::dungeon_master_says(copy::too_weakened_to_fight())
+        );
         return Ok(());
     }
     epic::print_dungeon_intro(phase);
